@@ -26,12 +26,12 @@ email=patrick.palmier@cerema.fr
 # tags are comma separated with spaces allowed
 tags=
 
-homepage=
-tracker=
-repository=
+homepage=https://github.com/crocovert/networks/
+tracker=https://hub.qgis.org/projects/networks
+repository=https://github.com/crocovert/networks/
 icon=icon.png
 # experimental flag
-experimental=False
+experimental=True
 
 # deprecated flag (applies to the whole plugin, not just a single version
 deprecated=False
