@@ -181,9 +181,11 @@ class reseaux:
                 for feature in layer.selectedFeatures():
             
                     geom = feature.geometry()
-                    nodes = geom.asPolyline()
-                    nodes.reverse() 
-                    newgeom = QgsGeometry.fromPolyline(nodes)
+                    geom.convertToMultiType()
+                    nodes = geom.asMultiPolyline()
+                    for points in nodes:
+                        points.reverse() 
+                    newgeom = QgsGeometry.fromMultiPolyline(nodes)
                     layer.changeGeometry(feature.id(),newgeom)
                 layer.endEditCommand()
             elif not layer.geometryType()==1:
@@ -242,8 +244,9 @@ class reseaux:
                 couches=self.iface.mapCanvas().layers()
                 index=QgsSpatialIndex()
                 for i in lines.getFeatures():
-                    if not i.geometry().isMultipart():
-                        index.insertFeature(i)
+                    if i.geometry().isMultipart():
+                        i.setGeometry(QgsGeometry.fromPolyline(i.geometry().asMultiPolyline()[0]))
+                    index.insertFeature(i)
                 couche_points=QgsMapLayerRegistry.instance().mapLayersByName(point_layer)[0]
                 if couche_points.geometryType()==0:
                     points=couche_points.getFeatures()
@@ -252,10 +255,11 @@ class reseaux:
                     nb=couche_points.featureCount()
                     for pos,pt in enumerate(points):
                         ptg=pt.geometry()
+                        if ptg.isMultipart():
+                            ptg=QgsGeometry.fromPoint(ptg.asMultiPoint()[0])
                         coor=ptg.asPoint()
                         nearest=index.intersects(QgsRectangle(coor.x()-delta,coor.y()-delta,coor.x()+delta,coor.y()+delta))
                         dmin=1e38
-                        #print(pos,len(nearest))
                         if len(nearest)>0:
                             for n in nearest:
                                 f=lines.getFeatures(request=QgsFeatureRequest(n))
