@@ -58,19 +58,19 @@ class reseaux:
         # Create action that will start plugin configuration
         self.action = QAction(
             QIcon(":/plugins/reseaux/icon.png"),
-            QCoreApplication.translate(u"Creer graphe",u"Creer graphe"), self.iface.mainWindow())
+            QCoreApplication.translate(u"Build graph",u"Build graph"), self.iface.mainWindow())
         # connect the action to the run method
         self.action_reverse = QAction(
             QIcon(":/plugins/reseaux/icon.png"),
-            QCoreApplication.translate(u"Inverser",u"Inverser"), self.iface.mainWindow())
+            QCoreApplication.translate(u"Reverse",u"Reverse"), self.iface.mainWindow())
             
         self.action_segmenter=QAction(
             QIcon(":/plugins/reseaux/icon.png"),
-            QCoreApplication.translate(u"Segmenter",u"Segmenter"), self.iface.mainWindow())
+            QCoreApplication.translate(u"Split",u"Split"), self.iface.mainWindow())
 
         self.action_connect=QAction(
             QIcon(":/plugins/reseaux/icon.png"),
-            QCoreApplication.translate(u"Connecter",u"Connecter") ,self.iface.mainWindow())
+            QCoreApplication.translate(u"Connect",u"Connect") ,self.iface.mainWindow())
 
         
         self.action.triggered.connect(self.run)
@@ -80,19 +80,19 @@ class reseaux:
 
         # Add toolbar button and menu item
         self.iface.addToolBarIcon(self.action)
-        self.iface.addPluginToMenu(QCoreApplication.translate(u"&Reseaux",u"&Reseaux"), self.action)
-        self.iface.addPluginToMenu(QCoreApplication.translate(u"&Reseaux",u"&Reseaux"), self.action_reverse)
-        self.iface.addPluginToMenu(QCoreApplication.translate(u"&Reseaux",u"&Reseaux"), self.action_segmenter)
-        self.iface.addPluginToMenu(QCoreApplication.translate(u"&Reseaux",u"&Reseaux"), self.action_connect)
+        self.iface.addPluginToMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action)
+        self.iface.addPluginToMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action_reverse)
+        self.iface.addPluginToMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action_segmenter)
+        self.iface.addPluginToMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action_connect)
         
 
     def unload(self):
         # Remove the plugin menu item and icon
         self.iface.removeToolBarIcon(self.action)
-        self.iface.removePluginMenu(QCoreApplication.translate(u"&Reseaux",u"&Reseaux"), self.action)
-        self.iface.removePluginMenu(QCoreApplication.translate(u"&Reseaux",u"&Reseaux"),self.action_reverse)
-        self.iface.removePluginMenu(QCoreApplication.translate(u"&Reseaux",u"&Reseaux"),self.action_segmenter)
-        self.iface.removePluginMenu(QCoreApplication.translate(u"&Reseaux",u"&Reseaux"),self.action_connect)
+        self.iface.removePluginMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action)
+        self.iface.removePluginMenu(QCoreApplication.translate(u"&Networks",u"&Networks"),self.action_reverse)
+        self.iface.removePluginMenu(QCoreApplication.translate(u"&Networks",u"&Networks"),self.action_segmenter)
+        self.iface.removePluginMenu(QCoreApplication.translate(u"&Networks",u"&Networks"),self.action_connect)
         
     # run method that performs all the real work
     def run(self):
@@ -119,9 +119,9 @@ class reseaux:
         idb=layer.fieldNameIndex("j")
         lines=layer.getFeatures()
         noeuds={}
-        nom_fichier=QFileDialog.getSaveFileName(caption=QCoreApplication.translate("Enregister fichier noeuds","Enregister fichier noeuds"),directory=os.getcwd(),filter="ESRI Shape File (*.shp)")
+        nom_fichier=QFileDialog.getSaveFileName(caption=QCoreApplication.translate("Save node layer as","Save nodes layer as"),directory=os.getcwd(),filter="ESRI Shape File (*.shp)")
         champs=QgsFields()
-        champs.append(QgsField("numero",QVariant.String))
+        champs.append(QgsField("Id",QVariant.String))
         table_noeuds=QgsVectorFileWriter(nom_fichier,"UTF-8",champs,QGis.WKBPoint,layer.crs(),"ESRI Shapefile")
         for ligne in lines:
             gligne=ligne.geometry()
@@ -150,7 +150,7 @@ class reseaux:
         #outs.close()
         lines=layer.getFeatures()
         layer.startEditing()
-        layer.beginEditCommand(QCoreApplication.translate("creation du graphe","creation du graphe"))
+        layer.beginEditCommand(QCoreApplication.translate("Building graph","Building graph"))
         for ligne in lines:
             gligne=ligne.geometry()
             if gligne.wkbType()==QGis.WKBMultiLineString:
@@ -177,7 +177,7 @@ class reseaux:
         if not layer==None:
             if layer.selectedFeatureCount()>0 and layer.geometryType()==1:
                 layer.startEditing()
-                layer.beginEditCommand(QCoreApplication.translate("Inversion du sens des lignes","Inversion du sens des lignes"))
+                layer.beginEditCommand(QCoreApplication.translate("Reverse polyline directions","Reverse polyline directions"))
                 for feature in layer.selectedFeatures():
             
                     geom = feature.geometry()
@@ -189,11 +189,11 @@ class reseaux:
                     layer.changeGeometry(feature.id(),newgeom)
                 layer.endEditCommand()
             elif not layer.geometryType()==1:
-                QMessageBox().information(None,QCoreApplication.translate("Inverser","Inverser"),QCoreApplication.translate("La couche n est pas composee de lignes","La couche n est pas composee de lignes"))
+                QMessageBox().information(None,QCoreApplication.translate("Reverse","Reverse"),QCoreApplication.translate("The active layer isn't composed of linear objects","The active layer isn't composed of linear objects"))
             else:
-                QMessageBox().information(None,QCoreApplication.translate("Inverser","Inverser"),QCoreApplication.translate("selection vide","selection vide"))
+                QMessageBox().information(None,QCoreApplication.translate("Reverse","Reverse"),QCoreApplication.translate("Empty selection","Empty selection"))
         else:
-            QMessageBox().information(None,QCoreApplication.translate("Inverser","Inverser"),QCoreApplication.translate("Aucune couche active","Aucune couche active"))
+            QMessageBox().information(None,QCoreApplication.translate("Reverse","Reverse"),QCoreApplication.translate("No active layer","No active layer"))
         #layer.commitChanges()
     
     def run_segmenter(self):
@@ -201,7 +201,7 @@ class reseaux:
         if not layer==None:
             if layer.selectedFeatureCount()>0 and layer.geometryType()==1:
                 layer.startEditing()
-                layer.beginEditCommand(QCoreApplication.translate("segmenter les polylignes en lignes simples","segmenter les polylignes en lignes simples"))
+                layer.beginEditCommand(QCoreApplication.translate("Split polylines into lines","Split polylines into lines"))
                 for feature in layer.selectedFeatures():
                     geom = feature.geometry()
                     nodes = geom.convertToType(QGis.Line,True).asMultiPolyline()
@@ -216,11 +216,11 @@ class reseaux:
                     layer.deleteFeature(id)
                 layer.endEditCommand()
             elif not layer.geometryType()==1:
-                QMessageBox().information(None,QCoreApplication.translate("Segmenter","Segmenter"),QCoreApplication.translate("La couche n est pas composee de lignes","La couche n est pas composee de lignes"))
+                QMessageBox().information(None,QCoreApplication.translate("Split","Split"),QCoreApplication.translate("The layer isn't composed of linear objects","The layer isn't composed of linear objects"))
             else:
-                QMessageBox().information(None,QCoreApplication.translate("Segmenter","Segmenter"),QCoreApplication.translate("selection vide","selection vide"))
+                QMessageBox().information(None,QCoreApplication.translate("Split","Split"),QCoreApplication.translate("Empty selection","Empty selection"))
         else:
-            QMessageBox().information(None,QCoreApplication.translate("Segmenter","Segmenter"),QCoreApplication.translate("Aucune couche active","Aucune couche active"))
+            QMessageBox().information(None,QCoreApplication.translate("Split","Split"),QCoreApplication.translate("No active layer","No active layer"))
 
         
     def run_connect(self):
@@ -251,7 +251,7 @@ class reseaux:
                 if couche_points.geometryType()==0:
                     points=couche_points.getFeatures()
                     lines.startEditing()
-                    lines.beginEditCommand(QCoreApplication.translate("Scinder les polylignes à l'endroit de la connexion","Scinder les polylignes à l'endroit de la connexion"))
+                    lines.beginEditCommand(QCoreApplication.translate("Split polylines at connection","Split polylines at connection"))
                     nb=couche_points.featureCount()
                     for pos,pt in enumerate(points):
                         ptg=pt.geometry()
@@ -296,10 +296,10 @@ class reseaux:
                                     index.deleteFeature(g)
                     lines.endEditCommand()
                 else:
-                    QMessageBox().information(None,QCoreApplication.translate("Connecter","Connecter"),QCoreApplication.translate("La couche selectionnee n est pas composee de points","La couche selectionnee n est pas composee de points"))
+                    QMessageBox().information(None,QCoreApplication.translate("Connect","Connect"),QCoreApplication.translate("The selected layer isn't composed of points","The selected layer isn't composed of points"))
             else:
-                QMessageBox().information(None,QCoreApplication.translate("Connecter","Connecter"),QCoreApplication.translate("La couche active n est pas composee de lignes","La couche active n est pas composee de lignes"))
+                QMessageBox().information(None,QCoreApplication.translate("Connect","Connect"),QCoreApplication.translate("The active layer isn't composed of lineear objects","The active layer isn't composed of linear objects"))
         else:
-            QMessageBox().information(None,QCoreApplication.translate("Connecter","Connecter"),QCoreApplication.translate("Aucune couche active","Aucune couche active"))
+            QMessageBox().information(None,QCoreApplication.translate("Connect","Connect"),QCoreApplication.translate("No active layer","No active layer"))
         
         

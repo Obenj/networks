@@ -51,8 +51,8 @@ class Ui_Connect(object):
         QtCore.QMetaObject.connectSlotsByName(Connect)
 
     def retranslateUi(self, Connect):
-        Connect.setWindowTitle(_translate("Connect", "Connecter points", None))
+        Connect.setWindowTitle(_translate("Connect", "Connect points", None))
         self.lineEdit.setText(_translate("Connect", "500", None))
-        self.label.setText(_translate("Connect", "Couche des points:", None))
-        self.label_2.setText(_translate("Connect", "Rayon de recherche:", None))
+        self.label.setText(_translate("Connect", "Point layer:", None))
+        self.label_2.setText(_translate("Connect", "Search radius:", None))
 

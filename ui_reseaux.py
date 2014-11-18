@@ -25,8 +25,8 @@ except AttributeError:
 
 class Ui_reseaux(object):
     def setupUi(self, reseaux):
-        reseaux.setObjectName(_fromUtf8("reseaux"))
-        reseaux.resize(340, 119)
+        reseaux.setObjectName(_fromUtf8("networks"))
+        reseaux.resize(400, 119)
         self.buttonBox = QtGui.QDialogButtonBox(reseaux)
         self.buttonBox.setGeometry(QtCore.QRect(20, 70, 301, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
@@ -39,7 +39,7 @@ class Ui_reseaux(object):
         self.label.setGeometry(QtCore.QRect(30, 20, 46, 13))
         self.label.setObjectName(_fromUtf8("label"))
         self.checkBox = QtGui.QCheckBox(reseaux)
-        self.checkBox.setGeometry(QtCore.QRect(80, 50, 221, 17))
+        self.checkBox.setGeometry(QtCore.QRect(80, 50, 300, 17))
         self.checkBox.setObjectName(_fromUtf8("checkBox"))
 
         self.retranslateUi(reseaux)
@@ -48,7 +48,7 @@ class Ui_reseaux(object):
         QtCore.QMetaObject.connectSlotsByName(reseaux)
 
     def retranslateUi(self, reseaux):
-        reseaux.setWindowTitle(_translate("reseaux", "Creer graphe", None))
-        self.label.setText(_translate("reseaux", "Prefixe:", None))
-        self.checkBox.setText(_translate("reseaux", "Charger les noeuds dans la carte active", None))
+        reseaux.setWindowTitle(_translate("networks", "Build graph", None))
+        self.label.setText(_translate("networks", "Prefix:", None))
+        self.checkBox.setText(_translate("networks", "Load node layer in active map", None))
 
