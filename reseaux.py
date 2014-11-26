@@ -80,19 +80,19 @@ class reseaux:
 
         # Add toolbar button and menu item
         self.iface.addToolBarIcon(self.action)
-        self.iface.addPluginToMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action)
-        self.iface.addPluginToMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action_reverse)
-        self.iface.addPluginToMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action_segmenter)
-        self.iface.addPluginToMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action_connect)
+        self.iface.addPluginToVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action)
+        self.iface.addPluginToVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action_reverse)
+        self.iface.addPluginToVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action_segmenter)
+        self.iface.addPluginToVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action_connect)
         
 
     def unload(self):
         # Remove the plugin menu item and icon
         self.iface.removeToolBarIcon(self.action)
-        self.iface.removePluginMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action)
-        self.iface.removePluginMenu(QCoreApplication.translate(u"&Networks",u"&Networks"),self.action_reverse)
-        self.iface.removePluginMenu(QCoreApplication.translate(u"&Networks",u"&Networks"),self.action_segmenter)
-        self.iface.removePluginMenu(QCoreApplication.translate(u"&Networks",u"&Networks"),self.action_connect)
+        self.iface.removePluginVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action)
+        self.iface.removePluginVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"),self.action_reverse)
+        self.iface.removePluginVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"),self.action_segmenter)
+        self.iface.removePluginVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"),self.action_connect)
         
     # run method that performs all the real work
     def run(self):
