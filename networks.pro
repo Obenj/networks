@@ -3,6 +3,7 @@ SOURCES = reseaux.py\
 			reseauxdialog_connect.py\
 			ui_connect.py\
 			ui_reseaux.py\
+			ui_linear_interpolation.py\
 
 TRANSLATIONS= networks_fr.ts\
 			networks_en.ts\
