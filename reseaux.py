@@ -380,7 +380,10 @@ class reseaux:
                     request=(QgsFeatureRequest().setFilterRect(self.fenetre)).setFilterExpression(texte).setSimplifyMethod(simple).setFlags(QgsFeatureRequest.ExactIntersect)
                     req_intra=(QgsFeatureRequest().setFilterRect(self.fenetre)).setFilterExpression('"'+self.impassibility+'" in (\'1\',\'2\',\'3\')').setSimplifyMethod(simple).setFlags(QgsFeatureRequest.ExactIntersect)
                     features=[f for f in layer.getFeatures(request)]
-                    features_intra=[f for f in layer.getFeatures(req_intra)]
+                    if self.flag_impassibility:
+                        features_intra=[f for f in layer.getFeatures(req_intra)]
+                    else:
+                        features_intra=[]
 
                     progressMessageBar = self.iface.messageBar().createMessage(QCoreApplication.translate("Interpolating...","Interpolating..."))
                     progress = QProgressBar()
@@ -446,7 +449,7 @@ class reseaux:
                                                                         result_test=True
                                                                         break
                                                         if result_test==False:
-                                                            if t<grille[d2x,self.ny-1-d2y] or grille[d2x,self.ny-1-d2y]==-9999:
+                                                            if (t<grille[d2x,self.ny-1-d2y] and d==grille_distance[d2x,self.ny-1-d2y]) or d<grille_distance[d2x,self.ny-1-d2y]:
                                                                 grille_distance[d2x,self.ny-1-d2y] =d
                                                                 grille[d2x,self.ny-1-d2y] =t
                                                 if sens in ['2','3'] and not i.attribute(self.BA_j)==None:
@@ -465,7 +468,7 @@ class reseaux:
                                                                         result_test=True
                                                                         break
                                                         if result_test==False:
-                                                            if t<grille[d2x,self.ny-1-d2y] or grille[d2x,self.ny-1-d2y]==-9999:
+                                                            if (t<grille[d2x,self.ny-1-d2y] and d==grille_distance[d2x,self.ny-1-d2y]) or d<grille_distance[d2x,self.ny-1-d2y]:
                                                                 grille_distance[d2x,self.ny-1-d2y] =d
                                                                 grille[d2x,self.ny-1-d2y] =t
                     sortie=os.path.splitext(self.rasterfile)
