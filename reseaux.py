@@ -27,13 +27,14 @@ from qgis.utils import *
 import numpy
 import math
 import time
-
+from osgeo import gdal
 # Initialize Qt resources from file resources.py
 import resources_rc
 # Import the code for the dialog
 from reseauxdialog import reseauxDialog
 from reseauxdialog_connect import reseauxDialog_connect
 from linear_interpolation_dialog_connect import reseauxDialog_interpol
+from dialog_isopoly import dialog_Isopoly
 import os.path
 
 
@@ -59,6 +60,7 @@ class reseaux:
         self.dlg = reseauxDialog()
         self.dlg_connect=reseauxDialog_connect()
         self.dlg_interpol=reseauxDialog_interpol()
+        self.dlg_iso=dialog_Isopoly()
         self.largeur=0.0
         self.hauteur=0.0
         self.nx=0
@@ -73,43 +75,42 @@ class reseaux:
     def initGui(self):
         # Create action that will start plugin configuration
         self.action = QAction(
-            QIcon(":/plugins/reseaux/icon.png"),
             QCoreApplication.translate(u"Build graph",u"Build graph"), self.iface.mainWindow())
         # connect the action to the run method
         self.action_reverse = QAction(
-            QIcon(":/plugins/reseaux/icon.png"),
             QCoreApplication.translate(u"Reverse",u"Reverse"), self.iface.mainWindow())
             
         self.action_segmenter=QAction(
-            QIcon(":/plugins/reseaux/icon.png"),
             QCoreApplication.translate(u"Split",u"Split"), self.iface.mainWindow())
 
         self.action_connect=QAction(
-            QIcon(":/plugins/reseaux/icon.png"),
             QCoreApplication.translate(u"Connect",u"Connect") ,self.iface.mainWindow())
 
         self.action_interpol=QAction(
-            QIcon(":/plugins/reseaux/icon.png"),
             QCoreApplication.translate(u"Linear interpolation",u"Linear interpolation") ,self.iface.mainWindow())
         
+        self.action_isolines=QAction(
+            QCoreApplication.translate(u"Isobands",u"Isobands") ,self.iface.mainWindow())
+
         self.action_help=QAction(
-            QIcon(":/plugins/reseaux/icon.png"),
             QCoreApplication.translate(u"Help",u"Help") ,self.iface.mainWindow())
+            
         
         self.action.triggered.connect(self.run)
         self.action_reverse.triggered.connect(self.run_inverser)
         self.action_segmenter.triggered.connect(self.run_segmenter)
         self.action_connect.triggered.connect(self.run_connect)
         self.action_interpol.triggered.connect(self.run_interpol)
+        self.action_isolines.triggered.connect(self.run_isolines)
         self.action_help.triggered.connect(self.run_help)
 
         # Add toolbar button and menu item
-        self.iface.addToolBarIcon(self.action)
         self.iface.addPluginToVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action)
         self.iface.addPluginToVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action_reverse)
         self.iface.addPluginToVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action_segmenter)
         self.iface.addPluginToVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action_connect)
         self.iface.addPluginToVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action_interpol)
+        self.iface.addPluginToVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action_isolines)
         self.iface.addPluginToVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"), self.action_help)
         
         
@@ -118,7 +119,10 @@ class reseaux:
         QObject.connect(self.dlg_interpol.lineEdit_3, SIGNAL("textEdited(QString)"), self.maj_nb_x)
         QObject.connect(self.dlg_interpol.lineEdit_4, SIGNAL("textEdited(QString)"), self.maj_nb_y)
         
+        QObject.connect(self.dlg_iso.spinBox,SIGNAL("ValueChanged(QString)"), self.maj_minmax)
+
         QObject.connect(self.dlg_interpol.pushButton,SIGNAL("clicked()"),self.parcourir)
+        QObject.connect(self.dlg_iso.pushButton,SIGNAL("clicked()"),self.parcourir2)
         
     def unload(self):
         # Remove the plugin menu item and icon
@@ -128,6 +132,7 @@ class reseaux:
         self.iface.removePluginVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"),self.action_segmenter)
         self.iface.removePluginVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"),self.action_connect)
         self.iface.removePluginVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"),self.action_interpol)
+        self.iface.removePluginVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"),self.action_isolines)
         self.iface.removePluginVectorMenu(QCoreApplication.translate(u"&Networks",u"&Networks"),self.action_help)
         
     # run method that performs all the real work
@@ -142,6 +147,9 @@ class reseaux:
             
     def parcourir(self):
         self.dlg_interpol.lineEdit_8.setText(QFileDialog.getSaveFileName(caption=QCoreApplication.translate("Save raster layer as","Save raster layer as"),directory=self.rep,filter="ArcInfo ASCII grid (*.asc)"))
+
+    def parcourir2(self):
+        self.dlg_iso.lineEdit_5.setText(QFileDialog.getSaveFileName(caption=QCoreApplication.translate("Save isolines layer as","Save isolines layer as"),directory=self.rep,filter="ESRI Shape (*.shp)"))
         
     def run_help(self):
         #showPluginHelp(self.plugin_dir+"index.html")
@@ -171,6 +179,15 @@ class reseaux:
                 self.dlg_interpol.lineEdit_2.setText(str(round(self.hauteur/float(deltay),0)))
                 self.ny=float(self.dlg_interpol.lineEdit_2.text())
         
+    def maj_minmax(self,band):
+        if not (self.band==""):
+            m1=self.raster_or.GetRasterBand(int(band)).GetMinimum()
+            m2=self.raster_or.GetRasterBand(int(band)).GetMaximum()
+            i1=10**int(math.log10(m2-m1))
+            self.dlg_iso.lineEdit.setText(str(m1))
+            self.dlg_iso.lineEdit_2.setText(str(m2))
+            self.dlg_iso.lineEdit_2.setText(str(i2))
+    
     
     def creer_graphe(self,prefixe,afficher):
         layer=self.iface.activeLayer()
@@ -355,6 +372,10 @@ class reseaux:
                     self.flag_variable_speed=self.dlg_interpol.checkBox_3.isChecked()
                     self.flag_impassibility=self.dlg_interpol.checkBox.isChecked()
                     self.flag_add_layer=self.dlg_interpol.checkBox_2.isChecked()
+                    self.nx=int(self.dlg_interpol.lineEdit.text())
+                    self.ny=int(self.dlg_interpol.lineEdit_2.text())
+                    self.pixel_size_x=float(self.dlg_interpol.lineEdit_3.text())
+                    self.pixel_size_y=float(self.dlg_interpol.lineEdit_4.text()) 
                     if self.rasterfile!="":
                         self.calcul_interpol()
             else:
@@ -384,18 +405,9 @@ class reseaux:
                         features_intra=[f for f in layer.getFeatures(req_intra)]
                     else:
                         features_intra=[]
-
-                    progressMessageBar = self.iface.messageBar().createMessage(QCoreApplication.translate("Interpolating...","Interpolating..."))
-                    progress = QProgressBar()
-                    progress.setMaximum(len(features))
-                    progress.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
-
-                    progressMessageBar.layout().addWidget(progress)
-                    self.iface.messageBar().pushWidget(progressMessageBar, self.iface.messageBar().INFO)
-
+                    progress = QProgressDialog("Limewise interpolation","Cancel",0,len(features)-1)
                     for k,i in enumerate(features):
-                        if k%100==0:
-                            progress.setValue(k )
+                        progress.setValue(k)
                         sens=i.attribute(self.flow_direction)
                         diffusion=i.attribute(self.diffusion_direction)
                         if self.flag_variable_speed:
@@ -420,7 +432,7 @@ class reseaux:
                                         res=geom.closestSegmentWithContext(pt1.asPoint())
                                         d=round(res[0],self.decimals)
 
-                                        if d<=grille_distance[d2x,self.ny-1-d2y] and d<self.radius*self.radius:
+                                        if d<=grille_distance[d2x,d2y] and d<self.radius*self.radius:
                                             if d>0 and l1>0:
                                                 pt2=res[1]
                                                 geoma=geom_l[:res[2]]+[pt2]
@@ -449,9 +461,9 @@ class reseaux:
                                                                         result_test=True
                                                                         break
                                                         if result_test==False:
-                                                            if (t<grille[d2x,self.ny-1-d2y] and d==grille_distance[d2x,self.ny-1-d2y]) or d<grille_distance[d2x,self.ny-1-d2y]:
-                                                                grille_distance[d2x,self.ny-1-d2y] =d
-                                                                grille[d2x,self.ny-1-d2y] =t
+                                                            if (t<grille[d2x,d2y] and d==grille_distance[d2x,d2y]) or d<grille_distance[d2x,d2y]:
+                                                                grille_distance[d2x,d2y] =d
+                                                                grille[d2x,d2y] =t
                                                 if sens in ['2','3'] and not i.attribute(self.BA_j)==None:
                                                     if (diffusion in ['1','3'] and test_sens>=0) or (diffusion in ['2','3'] and test_sens<=0):
                                                         tj=i.attribute(self.BA_j)
@@ -468,18 +480,18 @@ class reseaux:
                                                                         result_test=True
                                                                         break
                                                         if result_test==False:
-                                                            if (t<grille[d2x,self.ny-1-d2y] and d==grille_distance[d2x,self.ny-1-d2y]) or d<grille_distance[d2x,self.ny-1-d2y]:
-                                                                grille_distance[d2x,self.ny-1-d2y] =d
-                                                                grille[d2x,self.ny-1-d2y] =t
+                                                            if (t<grille[d2x,d2y] and d==grille_distance[d2x,d2y]) or d<grille_distance[d2x,d2y]:
+                                                                grille_distance[d2x,d2y] =d
+                                                                grille[d2x,self.d2y] =t
                     sortie=os.path.splitext(self.rasterfile)
                     fichier_grille=open(sortie[0]+".asc",'w')
                     fichier_grille.write("NCOLS {0:d}\nNROWS {1:d}\nXLLCORNER {2}\nYLLCORNER {3}\nDX {4}\nDY {5}\nNODATA_VALUE -9999\n".format(self.nx,self.ny,self.ll[0],self.ll[1],self.pixel_size_x,self.pixel_size_y))
                     fichier_grille2=open(sortie[0]+"_dist.asc",'w')
                     fichier_grille2.write("NCOLS {0:d}\nNROWS {1:d}\nXLLCORNER {2}\nYLLCORNER {3}\nDX {4}\nDY {5}\nNODATA_VALUE -9999\n".format(self.nx,self.ny,self.ll[0],self.ll[1],self.pixel_size_x,self.pixel_size_y))
                     g1=numpy.rot90(grille,1)
-                    g1=numpy.flipud(g1)
+                    #g1=numpy.flipud(g1)
                     g2=numpy.rot90(grille_distance,1)
-                    g2=numpy.flipud(g2)
+                    #g2=numpy.flipud(g2)
                     for i in g1:
                         fichier_grille.write(" ".join([str(ii) for ii in i])+"\n")
                     fichier_grille.close()
@@ -495,16 +507,519 @@ class reseaux:
                     fichier2_prj.close()
                     nom_sortie=os.path.basename(sortie[0])
                     rlayer=QgsRasterLayer(sortie[0]+".asc",nom_sortie)
-                    self.iface.messageBar().clearWidgets()
                     QgsMapLayerRegistry.instance().addMapLayer(rlayer)
+#                    nom_fichier_iso=sortie[0]+"_iso.shp"
+#                    champs=QgsFields()
+#                    champs.append(QgsField("Id",QVariant.String))
+#                    self.table_lignes=QgsVectorFileWriter(nom_fichier_iso,"UTF-8",champs,QGis.WKBMultiLineString
+#                    ,self.iface.activeLayer().crs(),"ESRI Shapefile")
+#                    for p in range(self.nx-1):
+#                        for q in range(self.ny-1):
+#                            self.contours(grille,p,q,0.1)
+#                    iso_layer=QgsVectorLayer(nom_fichier_iso,nom_sortie+"_iso",'ogr')
+#                    QgsMapLayerRegistry.instance().addMapLayer(iso_layer)
+#                    del self.table_lignes
             else:
                 QMessageBox().information(None,QCoreApplication.translate("Linear interpolation","Linear interpolation"),QCoreApplication.translate("The active layer isn't composed of linear objects","The active layer isn't composed of linear objects"))
         else:
             QMessageBox().information(None,QCoreApplication.translate("Linear interpolation","Linear interpolation"),QCoreApplication.translate("The active layer isn't a vector layer","The active layer isn't a vector layer"))
 
+    def contours(self,grille, p,q,s):
+        lignes={}
+        points={}
+        bords={}
+        cadreu={}
+        cadred={}
+        cadrel={}
+        cadrer={}
+        cadre={}
+        bordu={}
+        bordd={}
+        bordl={}
+        bordr={}
+        lu=grille[p,q]
+        ld=grille[p,q+1]
+        ru=grille[p+1,q]
+        rd=grille[p+1,q+1]
+        if lu>self.novalue:
+            ilu=int(math.floor(lu/s))
+        else:
+            ilu=self.novalue
+        if ld>self.novalue:
+            ild=int(math.floor(ld/s))
+        else:
+            ild=self.novalue
+        if ru>self.novalue:
+            iru=int(math.floor(ru/s))
+        else:
+            iru=self.novalue
+        if rd>self.novalue:
+            ird=int(math.floor(rd/s))
+        else:
+            ird=self.novalue
+        if ilu>self.novalue:
+            ilu=min(max(ilu,int(self.mini/s)),int(self.maxi/s))
+        if ild>self.novalue:
+            ild=min(max(ild,int(self.mini/s)),int(self.maxi/s))
+        if iru>self.novalue:
+            iru=min(max(iru,int(self.mini/s)),int(self.maxi/s))
+        if ird>self.novalue:
+            ird=min(max(ird,int(self.mini/s)),int(self.maxi/s))
+        if ilu==ild and ilu!=self.novalue:
+            if ilu not in bordl:
+                bordl[ilu]=[]
+            bordl[ilu].append([p,q])
+            if ilu+1 not in bordl:
+                bordl[ilu+1]=[]
+            bordl[ilu+1].append([p,q+1])
+        if ild==ird and ild!=self.novalue:
+            if ild not in bordd:
+                bordd[ild]=[]
+            bordd[ild].append([p,q+1])
+            if ild+1 not in bordd:
+                bordd[ild+1]=[]
+            bordd[ild+1].append([p+1,q+1])
+        if iru==ird and iru!=self.novalue:
+            if ird not in bordr:
+                bordr[ird]=[]
+            bordr[ird].append([p+1,q])
+            if ird+1 not in bordr:
+                bordr[ird+1]=[]
+            bordr[ird+1].append([p+1,q+1])
+        if ilu==iru and ilu!=self.novalue:
+            if ilu not in bordu:
+                bordu[ilu]=[]
+            bordu[ilu].append([p,q])
+            if ilu+1 not in bordu:
+                bordu[ilu+1]=[]
+            bordu[ilu+1].append([p+1,q])
+        if ilu<ild:
+            if lu==self.novalue:
+                if ild not in bordl:
+                    bordl[ild]=[]
+                bordl[ild].append([p,q])
+                bordl[ild].append([p,q+1])
+            else:
+                for i in range(ilu,ild):
+                    if i not in points:
+                        points[i]=[]
+                    points[i].append([p,q+((i+1)*s-lu)/(ld-lu)])
+                    if i==ilu:
+                        if i not in bordl:
+                            bordl[i]=[]
+                        bordl[i].append([p,q])
+                    if i+1 not in bordl:
+                        bordl[i+1]=[]
+                    bordl[i+1].append([p,q+((i+1)*s-lu)/(ld-lu)])
+                    if i==ild-1:
+                        if i+2 not in bordl:
+                            bordl[i+2]=[]
+                        bordl[i+2].append([p,q+1])
+        if ilu>ild:
+            if ld==self.novalue:
+                if ilu not in bordl:
+                    bordl[ilu]=[]
+                bordl[ilu].append([p,q])
+                bordl[ilu].append([p,q+1])
+            else:
+                for i in range(ild,ilu):
+                    if i not in points:
+                        points[i]=[]
+                    points[i].append([p,q+(lu-(i+1)*s)/(lu-ld)])
+                    if i==ild:
+                        if i-1 not in bordl:
+                            bordl[i-1]=[]
+                        bordl[i-1].append([p,q+1])
+                    if i not in bordl:
+                        bordl[i]=[]
+                    bordl[i].append([p,q+(lu-(i+1)*s)/(lu-ld)])
+                    if i==ilu-1:
+                        if i+1 not in bordl:
+                            bordl[i+1]=[]
+                        bordl[i+1].append([p,q])
+        if ild<ird:
+            if ld==self.novalue:
+                if ird not in bordd:
+                    bordd[ird]=[]
+                bordd[ird].append([p,q+1])
+                bordd[ird].append([p+1,q+1])
+            else:
+                for i in range(ild,ird):
+                    if i not in points:
+                        points[i]=[]
+                    points[i].append([p+((i+1)*s-ld)/(rd-ld),q+1])
+                    if i==ild:
+                        if i not in bordd:
+                            bordd[i]=[]
+                        bordd[i].append([p,q+1])
+                    if i+1 not in bordd:
+                        bordd[i+1]=[]
+                    bordd[i+1].append([p+((i+1)*s-ld)/(rd-ld),q+1])
+                    if i==ird-1:
+                        if i+2 not in bordd:
+                            bordd[i+2]=[]
+                        bordd[i+2].append([p+1,q+1])
+        if ild>ird:
+            if rd==self.novalue:
+                if ild not in bordd:
+                    bordd[ild]=[]
+                bordd[ild].append([p,q+1])
+                bordd[ild].append([p+1,q+1])
+            else:
+                for i in range(ird,ild):
+                    if i not in points:
+                        points[i]=[]
+                    points[i].append([p+(ld-(i+1)*s)/(ld-rd),q+1])
+                    if i==ird:
+                        if i-1 not in bordd:
+                            bordd[i-1]=[]
+                        bordd[i-1].append([p+1,q+1])
+                    if i not in bordd:
+                        bordd[i]=[]
+                    bordd[i].append([p+(ld-(i+1)*s)/(ld-rd),q+1])
+                    if i==ild-1:
+                        if i+1 not in bordd:
+                            bordd[i+1]=[]
+                        bordd[i+1].append([p,q+1])
+        if ird<iru:
+            if rd==self.novalue:
+                if iru not in bordr:
+                    bordr[iru]=[]
+                bordr[iru].append([p+1,q])
+                bordr[iru].append([p+1,q+1])
+            else:
+                for i in range(ird,iru):
+                    if i not in points:
+                        points[i]=[]
+                    points[i].append([p+1,q+(ru-(i+1)*s)/(ru-rd)])
+                    if i==iru-1:
+                        if i+1 not in bordr:
+                            bordr[i+1]=[]
+                        bordr[i+1].append([p+1,q])
+                    if i==ird:
+                        if i-1 not in bordr:
+                            bordr[i-1]=[]
+                        bordr[i-1].append([p+1,q+1])
+                    if i not in bordr:
+                        bordr[i]=[]
+                    bordr[i].append([p+1,q+(ru-(i+1)*s)/(ru-rd)])
+        if ird>iru:
+            if ru==self.novalue:
+                if ird not in bordr:
+                    bordr[ird]=[]
+                bordr[ird].append([p+1,q])
+                bordr[ird].append([p+1,q+1])
+            else:
+                for i in range(iru,ird):
+                    if i not in points:
+                        points[i]=[]
+                    points[i].append([p+1,q+((i+1)*s-ru)/(rd-ru)])
+                    if i==iru:
+                        if i not in bordr:
+                            bordr[i]=[]
+                        bordr[i].append([p+1,q])
+                    if i+1 not in bordr:
+                        bordr[i+1]=[]
+                    bordr[i+1].append([p+1,q+((i+1)*s-ru)/(rd-ru)])
+                    if i==ird-1:
+                        if i+2 not in bordr:
+                            bordr[i+2]=[]
+                        bordr[i+2].append([p+1,q+1])
+        if iru<ilu:
+            if ru==self.novalue:
+                if ilu not in bordu:
+                    bordu[ilu]=[]
+                bordu[ilu].append([p,q])
+                bordu[ilu].append([p+1,q])
+            else:
+                for i in range(iru,ilu):
+                    if i not in points:
+                        points[i]=[]
+                    points[i].append([p+(lu-(i+1)*s)/(lu-ru),q])
+                    if i==iru:
+                        if i-1 not in bordu:
+                            bordu[i-1]=[]
+                        bordu[i-1].append([p+1,q])
+                    if i==ilu-1:
+                        if i+1 not in bordu:
+                            bordu[i+1]=[]
+                        bordu[i+1].append([p,q])
+                    if i not in bordu:
+                        bordu[i]=[]
+                    bordu[i].append([p+(lu-(i+1)*s)/(lu-ru),q])
+        if iru>ilu:
+            if lu==self.novalue:
+                if iru not in bordu:
+                    bordu[iru]=[]
+                bordu[iru].append([p,q])
+                bordu[iru].append([p+1,q])
+            else:
+                for i in range(ilu,iru):
+                    if i not in points:
+                        points[i]=[]
+                    points[i].append([p+((i+1)*s-lu)/(ru-lu),q])
+                    if i==ilu:
+                        if i not in bordu:
+                            bordu[i]=[]
+                        bordu[i].append([p,q])
+                    if i+1 not in bordu:
+                        bordu[i+1]=[]
+                    bordu[i+1].append([p+((i+1)*s-lu)/(ru-lu),q])
+                    if i==iru-1:
+                        if i+2 not in bordu:
+                            bordu[i+2]=[]
+                        bordu[i+2].append([p+1,q])
+        for pt in points:
+            mx=sum(float(points[pt][j][0]) for j in range(len(points[pt])))/len(points[pt])
+            my=sum(float(points[pt][j][1]) for j in range(len(points[pt])))/len(points[pt])
+            for j in range(len(points[pt])):
+                n=len(points[pt])
+                if n>2:
+                    p1x=self.ll[0]+(p+1-0.02*((-1)**(int(j/2))))*self.pixel_size_x
+                    p2x=self.ll[0]+(points[pt][j][0]+0.5)*self.pixel_size_x
+                    q1y=self.ll[1]+(q+1-0.02*((-1)**(int(j/2))))*self.pixel_size_y
+                    q2y=self.ll[1]+(points[pt][j][1]+0.5)*self.pixel_size_y
+                    ligne1=QgsGeometry.fromMultiPolyline([[QgsPoint(p1x,q1y),QgsPoint(p2x,q2y)]])
+                else:
+                    p1x=self.ll[0]+(mx+0.5)*self.pixel_size_x
+                    p2x=self.ll[0]+(points[pt][j][0]+0.5)*self.pixel_size_x
+                    q1y=self.ll[1]+(my+0.5)*self.pixel_size_y
+                    q2y=self.ll[1]+(points[pt][j][1]+0.5)*self.pixel_size_y
+                    ligne1=QgsGeometry.fromMultiPolyline([[QgsPoint(p1x,q1y),QgsPoint(p2x,q2y)]])
+
+                f1=QgsFeature()
+                f1.setAttributes([pt*s])
+                f1.setGeometry(ligne1)
+                f2=QgsFeature()
+                f2.setAttributes([(pt+1)*s])
+                f2.setGeometry(ligne1)
+                if min(lu,ld,ru,rd)>self.novalue:
+                    if self.dlg_iso.radioButton.isChecked()==False:
+                        if pt*s not in self.polys:
+                            self.polys[pt*s]=[]
+                        self.polys[pt*s].append(f1.geometry().asMultiPolyline())
+                    if (pt+1)*s not in self.polys:
+                        self.polys[(pt+1)*s]=[]
+                    self.polys[(pt+1)*s].append(f2.geometry().asMultiPolyline())
+                    
+                    #self.table_lignes.addFeature(f1)
+                    #self.table_lignes.addFeature(f2)
+        if len(bordu)>0:
+            bords=sorted(bordu.items(),key=lambda x:x[1][0])
+            for pt in range(len(bords)-1):
+                p1=self.ll[0]+(bords[pt][1][0][0]+0.5)*self.pixel_size_x
+                p2=self.ll[0]+(bords[pt+1][1][0][0]+0.5)*self.pixel_size_x
+                q1=self.ll[1]+(bords[pt][1][0][1]+0.5)*self.pixel_size_y
+                q2=self.ll[1]+(bords[pt+1][1][0][1]+0.5)*self.pixel_size_y
+                ligne1=QgsGeometry.fromMultiPolyline([[QgsPoint(p1,q1),QgsPoint(p2,q2)]])
+                f1=QgsFeature()
+                f1.setAttributes([bords[pt][0]*s])
+                f1.setGeometry(ligne1)
+                if q>0:
+                    if grille[p,q-1]==self.novalue or grille[p+1,q-1]==self.novalue:
+                        if q<self.ny-1:
+                            if grille[p,q+1]>self.novalue and grille[p+1,q+1]>self.novalue:
+                                if bords[pt][0]*s not in self.polys:
+                                    self.polys[bords[pt][0]*s]=[]
+                                self.polys[bords[pt][0]*s].append(f1.geometry().asMultiPolyline())
+                                #self.table_lignes.addFeature(f1)
+                else:
+                    if bords[pt][0]*s not in self.polys:
+                        self.polys[bords[pt][0]*s]=[]
+                    self.polys[bords[pt][0]*s].append(f1.geometry().asMultiPolyline())
+                    #self.table_lignes.addFeature(f1)
+        if len(bordl)>0:
+            bords=sorted(bordl.items(),key=lambda x:x[1][0][1])
+            for pt in range(len(bords)-1):
+                #print(bords)
+                p1=self.ll[0]+(bords[pt][1][0][0]+0.5)*self.pixel_size_x
+                p2=self.ll[0]+(bords[pt+1][1][0][0]+0.5)*self.pixel_size_x
+                q1=self.ll[1]+(bords[pt][1][0][1]+0.5)*self.pixel_size_y
+                q2=self.ll[1]+(bords[pt+1][1][0][1]+0.5)*self.pixel_size_y
+                ligne1=QgsGeometry.fromMultiPolyline([[QgsPoint(p1,q1),QgsPoint(p2,q2)]])
+                f1=QgsFeature()
+                f1.setAttributes([bords[pt][0]*s])
+                f1.setGeometry(ligne1)
+                if p>0:
+                    if grille[p-1,q]==self.novalue or grille[p-1,q+1]==self.novalue:
+                        if p<self.nx-1:
+                            if grille[p+1,q]>self.novalue and grille[p+1,q+1]>self.novalue:
+                                if bords[pt][0]*s not in self.polys:
+                                    self.polys[bords[pt][0]*s]=[]
+                                self.polys[bords[pt][0]*s].append(f1.geometry().asMultiPolyline())                                
+                                #self.table_lignes.addFeature(f1)
+                else:
+                    if bords[pt][0]*s not in self.polys:
+                        self.polys[bords[pt][0]*s]=[]
+                    self.polys[bords[pt][0]*s].append(f1.geometry().asMultiPolyline())                    
+                    #self.table_lignes.addFeature(f1)
+        if len(bordr)>0:
+            bords=sorted(bordr.items(),key=lambda x:x[1][0][1])
+            for pt in range(len(bords)-1):
+                #print(bords)
+                p1=self.ll[0]+(bords[pt][1][0][0]+0.5)*self.pixel_size_x
+                p2=self.ll[0]+(bords[pt+1][1][0][0]+0.5)*self.pixel_size_x
+                q1=self.ll[1]+(bords[pt][1][0][1]+0.5)*self.pixel_size_y
+                q2=self.ll[1]+(bords[pt+1][1][0][1]+0.5)*self.pixel_size_y
+                ligne1=QgsGeometry.fromMultiPolyline([[QgsPoint(p1,q1),QgsPoint(p2,q2)]])
+                f1=QgsFeature()
+                f1.setAttributes([bords[pt][0]*s])
+                f1.setGeometry(ligne1)
+                if p<self.nx-2:
+                    if grille[p+2,q]==self.novalue or grille[p+2,q+1]==self.novalue:
+                        if q>-1:
+                            if grille[p,q]>self.novalue and grille[p,q+1]>self.novalue:
+                                if bords[pt][0]*s not in self.polys:
+                                    self.polys[bords[pt][0]*s]=[]
+                                self.polys[bords[pt][0]*s].append(f1.geometry().asMultiPolyline())                                
+                                #self.table_lignes.addFeature(f1)
+                else:
+                    if bords[pt][0]*s not in self.polys:
+                        self.polys[bords[pt][0]*s]=[]
+                    self.polys[bords[pt][0]*s].append(f1.geometry().asMultiPolyline())                    
+                    #self.table_lignes.addFeature(f1)
+        if len(bordd)>0:
+            bords=sorted(bordd.items(),key=lambda x:x[1][0])
+            #print(bords)
+            for pt in range(len(bords)-1):
+                p1=self.ll[0]+(bords[pt][1][0][0]+0.5)*self.pixel_size_x
+                p2=self.ll[0]+(bords[pt+1][1][0][0]+0.5)*self.pixel_size_x
+                q1=self.ll[1]+(bords[pt][1][0][1]+0.5)*self.pixel_size_y
+                q2=self.ll[1]+(bords[pt+1][1][0][1]+0.5)*self.pixel_size_y
+                ligne1=QgsGeometry.fromMultiPolyline([[QgsPoint(p1,q1),QgsPoint(p2,q2)]])
+                f1=QgsFeature()
+                f1.setAttributes([bords[pt][0]*s])
+                f1.setGeometry(ligne1)
+                if q<self.ny-2:
+                    if grille[p,q+2]==self.novalue or grille[p+1,q+2]==self.novalue:
+                        if q>-1:
+                            if grille[p,q]>self.novalue and grille[p+1,q]>self.novalue:
+                                if bords[pt][0]*s not in self.polys:
+                                    self.polys[bords[pt][0]*s]=[]
+                                self.polys[bords[pt][0]*s].append(f1.geometry().asMultiPolyline())                                
+                                #self.table_lignes.addFeature(f1)
+                else:
+#                    self.table_lignes.addFeature(f1)
+                    if bords[pt][0]*s not in self.polys:
+                        self.polys[bords[pt][0]*s]=[]
+                    self.polys[bords[pt][0]*s].append(f1.geometry().asMultiPolyline())
+
+
+
+    def run_isolines(self):
+        layer=self.iface.activeLayer()
+        if not layer==None:
+            if layer.type()==QgsMapLayer.RasterLayer:
+                provider = layer.dataProvider()
+                filePath = str(provider.dataSourceUri())
+                self.raster_or = gdal.Open(filePath)
+                nb_bands=layer.bandCount()
+                self.dlg_iso.spinBox.setMaximum(nb_bands)
+                m1=self.raster_or.GetRasterBand(1).GetMinimum()
+                m2=self.raster_or.GetRasterBand(1).GetMaximum()
+                self.polys={}
+                if 'mini' not in dir(self):
+                    self.dlg_iso.lineEdit.setText(str(m1))
+                else:
+                    self.dlg_iso.lineEdit.setText(str(self.mini))
+                if 'maxi' not in dir(self):
+                    self.dlg_iso.lineEdit_2.setText(str(m2))
+                else:
+                    self.dlg_iso.lineEdit_2.setText(str(self.maxi))
+                if 'intervalle' not in dir(self):
+                    self.dlg_iso.lineEdit_3.setText(str(10**int(math.log10(m2-m1))))
+                else:
+                    self.dlg_iso.lineEdit_3.setText(str(self.intervalle))
+                self.novalue=self.raster_or.GetRasterBand(1).GetNoDataValue()
+                self.dlg_iso.show()
+                result = self.dlg_iso.exec_()
+                if result == 1:
+                    self.nom_fichier_iso=self.dlg_iso.lineEdit_5.text()
+                    self.intervalle=float(self.dlg_iso.lineEdit_3.text())
+                    self.mini=float(self.dlg_iso.lineEdit.text())
+                    self.maxi=float(self.dlg_iso.lineEdit_2.text())
+                    sortie=os.path.splitext(self.nom_fichier_iso)
+                    nom_sortie=os.path.basename(sortie[0])
+                    grille = self.raster_or.GetRasterBand(nb_bands).ReadAsArray()
+                    grille=numpy.rot90(grille,3)
+                    champs=QgsFields()
+                    champs.append(QgsField("Id",QVariant.Double))
+                    if self.dlg_iso.radioButton.isChecked()==False:
+                        self.table_lignes=QgsVectorFileWriter(self.nom_fichier_iso,"UTF-8",champs,QGis.WKBPolygon,self.iface.activeLayer().crs(),"ESRI Shapefile")
+                    else:
+                        self.table_lignes=QgsVectorFileWriter(self.nom_fichier_iso,"UTF-8",champs,QGis.WKBMultiLineString,self.iface.activeLayer().crs(),"ESRI Shapefile")
+                    self.fenetre=layer.extent()
+                    a=self.fenetre.toString().split(":")
+                    p1=a[0].split(',')
+                    p2=a[1].split(',')
+                    self.ll=(float(p1[0]),float(p1[1]))
+                    self.hauteur=float(p2[1])-float(p1[1])
+                    self.largeur=float(p2[0])-float(p1[0])
+                    self.nx=int(layer.width())
+                    self.ny=int(layer.height())
+                    self.pixel_size_x=round(self.largeur/self.nx,2)
+                    self.pixel_size_y=round(self.hauteur/self.ny,2)
+                    self.process=QProgressDialog("Generating isolines...","Cancel",0,(self.nx-1)*(self.ny-1))
+                    self.process.forceShow()
+                    for p in range(self.nx-1):
+                        for q in range(self.ny-1):
+                            self.process.setValue(p*(self.ny)-1+q)
+                            self.contours(grille,p,q,self.intervalle)
+                    npolys=len(self.polys)-1
+                    self.process=QProgressDialog("Building Polygons...","Cancel",0,npolys)
+                    self.process.forceShow()
+                    for k,ff in enumerate(self.polys):
+                        li=self.polys[ff]
+                        self.process.setValue(k)
+                        liste1=[QgsGeometry.fromMultiPolyline(l1) for l1 in li]
+                        for j,i in enumerate(liste1):
+                            if j==0:
+                                po=i
+                            else:
+                                po=po.combine(i)
+                        if po.isMultipart()==False:
+                            po.convertToMultiType()
+                        pp=po.asMultiPolyline()
+                        poly_geom=self.remove_bad_lines(pp)
+                        
+                        f1=QgsFeature()
+                        f1.setAttributes([ff])
+                        geom=QgsGeometry.fromPolygon(poly_geom)
+                        if self.dlg_iso.radioButton.isChecked()==False:
+                            f1.setGeometry(geom)
+                        else:
+                            f1.setGeometry(po)
+                        self.table_lignes.addFeature(f1)
+                            
+                    iso_layer=QgsVectorLayer(self.nom_fichier_iso,nom_sortie,'ogr')
+                    QgsMapLayerRegistry.instance().addMapLayer(iso_layer)
+                    del self.table_lignes
+            else:
+                QMessageBox().information(None,QCoreApplication.translate("Linear interpolation","Linear interpolation"),QCoreApplication.translate("The active layer isn't a raster layer","The active layer isn't a raster layer"))
+        else:
+            QMessageBox().information(None,QCoreApplication.translate("Isobands","Isobands"),QCoreApplication.translate("No active layer","No Active layer"))
         
-        
-    
+
+
+
+
+
+    def remove_bad_lines( self, lines ):
+        temp_geom = []
+        if len( lines ) == 1:
+          if len( lines[ 0 ] ) > 2:
+            temp_geom = lines
+          else:
+            temp_geom = []
+        else:
+          temp_geom = [ elem for elem in lines if len( elem ) > 2 ]
+        return temp_geom
+
+
+
+
+
+
     def connect(self,point_layer,radius):
         delta=float(radius)
         lines=self.iface.activeLayer()

@@ -4,6 +4,7 @@ SOURCES = reseaux.py\
 			ui_connect.py\
 			ui_reseaux.py\
 			ui_linear_interpolation.py\
+			ui_isopoly.py
 
 TRANSLATIONS= networks_fr.ts\
 			networks_en.ts\

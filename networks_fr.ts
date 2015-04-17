@@ -4,7 +4,7 @@
 <context>
     <name>&amp;Networks</name>
     <message>
-        <location filename="reseaux.py" line="131"/>
+        <location filename="reseaux.py" line="136"/>
         <source>&amp;Networks</source>
         <translation>&amp;Reseaux</translation>
     </message>
@@ -12,7 +12,7 @@
 <context>
     <name>Build graph</name>
     <message>
-        <location filename="reseaux.py" line="75"/>
+        <location filename="reseaux.py" line="77"/>
         <source>Build graph</source>
         <translation>Créer graphe</translation>
     </message>
@@ -20,7 +20,7 @@
 <context>
     <name>Building graph</name>
     <message>
-        <location filename="reseaux.py" line="221"/>
+        <location filename="reseaux.py" line="238"/>
         <source>Building graph</source>
         <translation>Création du graphe</translation>
     </message>
@@ -28,7 +28,7 @@
 <context>
     <name>Connect</name>
     <message>
-        <location filename="reseaux.py" line="569"/>
+        <location filename="reseaux.py" line="1080"/>
         <source>Connect</source>
         <translation>Connecter</translation>
     </message>
@@ -56,7 +56,7 @@
 <context>
     <name>Empty selection</name>
     <message>
-        <location filename="reseaux.py" line="289"/>
+        <location filename="reseaux.py" line="306"/>
         <source>Empty selection</source>
         <translation>Selection vide</translation>
     </message>
@@ -74,13 +74,69 @@
     <message>
         <location filename="reseaux.py" line="385"/>
         <source>Interpolating...</source>
-        <translation>Interpolation...</translation>
+        <translation type="obsolete">Interpolation...</translation>
+    </message>
+</context>
+<context>
+    <name>Isobands</name>
+    <message>
+        <location filename="reseaux.py" line="993"/>
+        <source>Isobands</source>
+        <translation>Contours isovaleurs</translation>
+    </message>
+</context>
+<context>
+    <name>Isopoly</name>
+    <message>
+        <location filename="ui_isopoly.py" line="84"/>
+        <source>Isolines generation</source>
+        <translation>Generation des isolignes</translation>
+    </message>
+    <message>
+        <location filename="ui_isopoly.py" line="85"/>
+        <source>Min:</source>
+        <translation>Min:</translation>
+    </message>
+    <message>
+        <location filename="ui_isopoly.py" line="86"/>
+        <source>Max:</source>
+        <translation>Max:</translation>
+    </message>
+    <message>
+        <location filename="ui_isopoly.py" line="87"/>
+        <source>Step:</source>
+        <translation>Intervalle:</translation>
+    </message>
+    <message>
+        <location filename="ui_isopoly.py" line="88"/>
+        <source>Object type</source>
+        <translation>Type d&apos;objets</translation>
+    </message>
+    <message>
+        <location filename="ui_isopoly.py" line="89"/>
+        <source>Polyline</source>
+        <translation>Polyligne</translation>
+    </message>
+    <message>
+        <location filename="ui_isopoly.py" line="90"/>
+        <source>Polygon</source>
+        <translation>Polygone</translation>
+    </message>
+    <message>
+        <location filename="ui_isopoly.py" line="91"/>
+        <source>Band:</source>
+        <translation>Bande:</translation>
+    </message>
+    <message>
+        <location filename="ui_isopoly.py" line="92"/>
+        <source>Save as...</source>
+        <translation>Enregistrer sous...</translation>
     </message>
 </context>
 <context>
     <name>Linear interpolation</name>
     <message>
-        <location filename="reseaux.py" line="500"/>
+        <location filename="reseaux.py" line="991"/>
         <source>Linear interpolation</source>
         <translation>Interpolation linéaire</translation>
     </message>
@@ -206,15 +262,20 @@
 <context>
     <name>No active layer</name>
     <message>
-        <location filename="reseaux.py" line="569"/>
+        <location filename="reseaux.py" line="1080"/>
         <source>No active layer</source>
         <translation>Aucune couche active</translation>
+    </message>
+    <message>
+        <location filename="reseaux.py" line="993"/>
+        <source>No Active layer</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>Reverse</name>
     <message>
-        <location filename="reseaux.py" line="264"/>
+        <location filename="reseaux.py" line="281"/>
         <source>Reverse</source>
         <translation>Inverser</translation>
     </message>
@@ -222,15 +283,23 @@
 <context>
     <name>Reverse polyline directions</name>
     <message>
-        <location filename="reseaux.py" line="248"/>
+        <location filename="reseaux.py" line="265"/>
         <source>Reverse polyline directions</source>
         <translation>Inverser le sens des lignes</translation>
     </message>
 </context>
 <context>
+    <name>Save isolines layer as</name>
+    <message>
+        <location filename="reseaux.py" line="152"/>
+        <source>Save isolines layer as</source>
+        <translation>Enregistrer les isolignes sous</translation>
+    </message>
+</context>
+<context>
     <name>Save node layer as</name>
     <message>
-        <location filename="reseaux.py" line="190"/>
+        <location filename="reseaux.py" line="207"/>
         <source>Save nodes layer as</source>
         <translation>Enregistrer la couche des noeuds sous</translation>
     </message>
@@ -238,7 +307,7 @@
 <context>
     <name>Save raster layer as</name>
     <message>
-        <location filename="reseaux.py" line="144"/>
+        <location filename="reseaux.py" line="149"/>
         <source>Save raster layer as</source>
         <translation>Enregistrer le raster sous</translation>
     </message>
@@ -246,7 +315,7 @@
 <context>
     <name>Split</name>
     <message>
-        <location filename="reseaux.py" line="291"/>
+        <location filename="reseaux.py" line="308"/>
         <source>Split</source>
         <translation>Segmenter</translation>
     </message>
@@ -254,7 +323,7 @@
 <context>
     <name>Split polylines at connection</name>
     <message>
-        <location filename="reseaux.py" line="520"/>
+        <location filename="reseaux.py" line="1031"/>
         <source>Split polylines at connection</source>
         <translation>Scinder les polylignes à la connexion</translation>
     </message>
@@ -262,15 +331,23 @@
 <context>
     <name>Split polylines into lines</name>
     <message>
-        <location filename="reseaux.py" line="272"/>
+        <location filename="reseaux.py" line="289"/>
         <source>Split polylines into lines</source>
         <translation>Segmenter les polylignes en lignes simples</translation>
     </message>
 </context>
 <context>
+    <name>The active layer isn&apos;t a raster layer</name>
+    <message>
+        <location filename="reseaux.py" line="991"/>
+        <source>The active layer isn&apos;t a raster layer</source>
+        <translation>La couche active n&apos;est pas de type raster</translation>
+    </message>
+</context>
+<context>
     <name>The active layer isn&apos;t a vector layer</name>
     <message>
-        <location filename="reseaux.py" line="500"/>
+        <location filename="reseaux.py" line="525"/>
         <source>The active layer isn&apos;t a vector layer</source>
         <translation>La couche active n&apos;est pas une couche vectorielle</translation>
     </message>
@@ -278,7 +355,7 @@
 <context>
     <name>The active layer isn&apos;t composed of linear objects</name>
     <message>
-        <location filename="reseaux.py" line="567"/>
+        <location filename="reseaux.py" line="1078"/>
         <source>The active layer isn&apos;t composed of linear objects</source>
         <translation>La couche active n&apos;est pas composée d&apos;objets linéaires</translation>
     </message>
@@ -294,7 +371,7 @@
 <context>
     <name>The layer isn&apos;t composed of linear objects</name>
     <message>
-        <location filename="reseaux.py" line="287"/>
+        <location filename="reseaux.py" line="304"/>
         <source>The layer isn&apos;t composed of linear objects</source>
         <translation>La couche n&apos;est pas composée d&apos;objets linéaires</translation>
     </message>
@@ -302,7 +379,7 @@
 <context>
     <name>The selected layer isn&apos;t composed of points</name>
     <message>
-        <location filename="reseaux.py" line="565"/>
+        <location filename="reseaux.py" line="1076"/>
         <source>The selected layer isn&apos;t composed of points</source>
         <translation>La couche sélectionnée n&apos;est pas composée de points</translation>
     </message>

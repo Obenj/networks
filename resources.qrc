@@ -1,5 +1,5 @@
 <RCC>
     <qresource prefix="/plugins/reseaux" >
-        <file>icon.png</file>
+        <file>networks.png</file>
     </qresource>
 </RCC>

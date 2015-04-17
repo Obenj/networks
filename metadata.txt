@@ -21,7 +21,8 @@ email=patrick.palmier@cerema.fr
 # Optional items:
 
 # Uncomment the following line and add your changelog entries:
-changelog=1.0.1 some bug fixes in line-based interpolation
+changelog=1.1 add a functionnality to generate isobands (polygons objets)
+	1.0.1 some bug fixes in line-based interpolation
 	1.0 add a fonctionnality linear-based interpolation for accessibility maps taking into account one way/two way links, side of spread and impassibility
 	0.41: Change the networks menu from plugin Menu to Vector Menu
 	0.4: Change English as default langage
@@ -33,7 +34,7 @@ tags=
 homepage=https://github.com/crocovert/networks/
 tracker=https://hub.qgis.org/projects/networks
 repository=https://github.com/crocovert/networks/
-icon=icon.png
+icon=networks.png
 # experimental flag
 experimental=False
 
