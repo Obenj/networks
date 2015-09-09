@@ -3,7 +3,7 @@
 /***************************************************************************
  reseaux
                                  A QGIS plugin
- CrÃ©er
+ CrÃÂÃÂ©er
                               -------------------
         begin                : 2014-09-09
         copyright            : (C) 2014 by CEREMA Nord-Picardie
@@ -36,7 +36,8 @@ from reseauxdialog_connect import reseauxDialog_connect
 from linear_interpolation_dialog_connect import reseauxDialog_interpol
 from dialog_isopoly import dialog_Isopoly
 import os.path
-
+from pyspatialite import dbapi2 as db
+import processing
 
 class reseaux:
 
@@ -146,10 +147,10 @@ class reseaux:
             self.creer_graphe(self.dlg.lineEdit.text(),self.dlg.checkBox.isChecked())
             
     def parcourir(self):
-        self.dlg_interpol.lineEdit_8.setText(QFileDialog.getSaveFileName(caption=QCoreApplication.translate("Save raster layer as","Save raster layer as"),directory=self.rep,filter="ArcInfo ASCII grid (*.asc)"))
+        self.dlg_interpol.lineEdit_8.setText(str(QFileDialog.getSaveFileName(caption=QCoreApplication.translate("Save raster layer as","Save raster layer as"),directory=self.rep,filter="ArcInfo ASCII grid (*.asc)")))
 
     def parcourir2(self):
-        self.dlg_iso.lineEdit_5.setText(QFileDialog.getSaveFileName(caption=QCoreApplication.translate("Save isolines layer as","Save isolines layer as"),directory=self.rep,filter="ESRI Shape (*.shp)"))
+        self.dlg_iso.lineEdit_5.setText(str(QFileDialog.getSaveFileName(caption=QCoreApplication.translate("Save isolines layer as","Save isolines layer as"),directory=self.rep,filter="ESRI Shape (*.shp)")))
         
     def run_help(self):
         #showPluginHelp(self.plugin_dir+"index.html")
@@ -181,9 +182,14 @@ class reseaux:
         
     def maj_minmax(self,band):
         if not (self.band==""):
-            m1=self.raster_or.GetRasterBand(int(band)).GetMinimum()
-            m2=self.raster_or.GetRasterBand(int(band)).GetMaximum()
-            i1=10**int(math.log10(m2-m1))
+            m1=float(self.raster_or.GetRasterBand(int(band)).GetMinimum())
+            m2=float(self.raster_or.GetRasterBand(int(band)).GetMaximum())
+            if m1==None:
+                m1=0
+            if m2==None:
+                m2=1
+            m3=max(m2-m1,1e-10)
+            i1=10**int(math.log10(m3))
             self.dlg_iso.lineEdit.setText(str(m1))
             self.dlg_iso.lineEdit_2.setText(str(m2))
             self.dlg_iso.lineEdit_2.setText(str(i2))
@@ -390,6 +396,7 @@ class reseaux:
         grille=numpy.array([[-9999.0]*self.ny]*self.nx)
         grille_distance=numpy.array([[1e38]*self.ny]*self.nx)
         self.rep=os.path.dirname(self.rasterfile)
+        self.fenetre=self.iface.mapCanvas().extent()
         layer=self.iface.activeLayer()
         if layer.type()==QgsMapLayer.VectorLayer:
             if not layer==None:
@@ -558,13 +565,13 @@ class reseaux:
         else:
             ird=self.novalue
         if ilu>self.novalue:
-            ilu=min(max(ilu,int(self.mini/s)),int(self.maxi/s))
+            ilu=min(max(ilu,int(math.floor(self.mini/s))),int(math.floor(self.maxi/s)))
         if ild>self.novalue:
-            ild=min(max(ild,int(self.mini/s)),int(self.maxi/s))
+            ild=min(max(ild,int(math.floor(self.mini/s))),int(math.floor(self.maxi/s)))
         if iru>self.novalue:
-            iru=min(max(iru,int(self.mini/s)),int(self.maxi/s))
+            iru=min(max(iru,int(math.floor(self.mini/s))),int(math.floor(self.maxi/s)))
         if ird>self.novalue:
-            ird=min(max(ird,int(self.mini/s)),int(self.maxi/s))
+            ird=min(max(ird,int(math.floor(self.mini/s))),int(math.floor(self.maxi/s)))
         if ilu==ild and ilu!=self.novalue:
             if ilu not in bordl:
                 bordl[ilu]=[]
@@ -794,10 +801,9 @@ class reseaux:
                 f2.setAttributes([(pt+1)*s])
                 f2.setGeometry(ligne1)
                 if min(lu,ld,ru,rd)>self.novalue:
-                    if self.dlg_iso.radioButton.isChecked()==False:
-                        if pt*s not in self.polys:
-                            self.polys[pt*s]=[]
-                        self.polys[pt*s].append(f1.geometry().asMultiPolyline())
+                    if pt*s not in self.polys:
+                        self.polys[pt*s]=[]
+                    self.polys[pt*s].append(f1.geometry().asMultiPolyline())
                     if (pt+1)*s not in self.polys:
                         self.polys[(pt+1)*s]=[]
                     self.polys[(pt+1)*s].append(f2.geometry().asMultiPolyline())
@@ -917,6 +923,15 @@ class reseaux:
                 self.dlg_iso.spinBox.setMaximum(nb_bands)
                 m1=self.raster_or.GetRasterBand(1).GetMinimum()
                 m2=self.raster_or.GetRasterBand(1).GetMaximum()
+                if m1==None:
+                    m1=0
+                else:
+                    m1=float(m1)
+                if m2==None:
+                    m2=1
+                else:
+                    m2=float(m2)
+                m3=max(m2-m1,1e-10)
                 self.polys={}
                 if 'mini' not in dir(self):
                     self.dlg_iso.lineEdit.setText(str(m1))
@@ -927,7 +942,7 @@ class reseaux:
                 else:
                     self.dlg_iso.lineEdit_2.setText(str(self.maxi))
                 if 'intervalle' not in dir(self):
-                    self.dlg_iso.lineEdit_3.setText(str(10**int(math.log10(m2-m1))))
+                    self.dlg_iso.lineEdit_3.setText(str(10**int(math.log10(m3))))
                 else:
                     self.dlg_iso.lineEdit_3.setText(str(self.intervalle))
                 self.novalue=self.raster_or.GetRasterBand(1).GetNoDataValue()
@@ -935,19 +950,22 @@ class reseaux:
                 result = self.dlg_iso.exec_()
                 if result == 1:
                     self.nom_fichier_iso=self.dlg_iso.lineEdit_5.text()
+                    if os.path.isfile(self.nom_fichier_iso):
+                        QgsVectorFileWriter.deleteShapeFile(self.nom_fichier_iso)
                     self.intervalle=float(self.dlg_iso.lineEdit_3.text())
                     self.mini=float(self.dlg_iso.lineEdit.text())
                     self.maxi=float(self.dlg_iso.lineEdit_2.text())
                     sortie=os.path.splitext(self.nom_fichier_iso)
                     nom_sortie=os.path.basename(sortie[0])
+                    rep_sortie=os.path.dirname(sortie[0])
                     grille = self.raster_or.GetRasterBand(nb_bands).ReadAsArray()
                     grille=numpy.rot90(grille,3)
-                    champs=QgsFields()
-                    champs.append(QgsField("Id",QVariant.Double))
+                    champs2=QgsFields()
+                    champs2.append(QgsField("Id",QVariant.Double))
                     if self.dlg_iso.radioButton.isChecked()==False:
-                        self.table_lignes=QgsVectorFileWriter(self.nom_fichier_iso,"UTF-8",champs,QGis.WKBPolygon,self.iface.activeLayer().crs(),"ESRI Shapefile")
+                        table_lignes=QgsVectorFileWriter(self.nom_fichier_iso,"UTF-8",champs2,QGis.WKBMultiLineString,self.iface.activeLayer().crs(),"ESRI Shapefile")
                     else:
-                        self.table_lignes=QgsVectorFileWriter(self.nom_fichier_iso,"UTF-8",champs,QGis.WKBMultiLineString,self.iface.activeLayer().crs(),"ESRI Shapefile")
+                        table_lignes=QgsVectorFileWriter(self.nom_fichier_iso,"UTF-8",champs2,QGis.WKBMultiLineString,self.iface.activeLayer().crs(),"ESRI Shapefile")
                     self.fenetre=layer.extent()
                     a=self.fenetre.toString().split(":")
                     p1=a[0].split(',')
@@ -969,31 +987,74 @@ class reseaux:
                     self.process=QProgressDialog("Building Polygons...","Cancel",0,npolys)
                     self.process.forceShow()
                     for k,ff in enumerate(self.polys):
-                        li=self.polys[ff]
+                        li=self.polys[ff] 
                         self.process.setValue(k)
                         liste1=[QgsGeometry.fromMultiPolyline(l1) for l1 in li]
                         for j,i in enumerate(liste1):
-                            if j==0:
-                                po=i
-                            else:
-                                po=po.combine(i)
-                        if po.isMultipart()==False:
-                            po.convertToMultiType()
-                        pp=po.asMultiPolyline()
-                        poly_geom=self.remove_bad_lines(pp)
-                        
-                        f1=QgsFeature()
-                        f1.setAttributes([ff])
-                        geom=QgsGeometry.fromPolygon(poly_geom)
-                        if self.dlg_iso.radioButton.isChecked()==False:
+                            f1=QgsFeature()
+                            geom=i
                             f1.setGeometry(geom)
-                        else:
-                            f1.setGeometry(po)
-                        self.table_lignes.addFeature(f1)
-                            
-                    iso_layer=QgsVectorLayer(self.nom_fichier_iso,nom_sortie,'ogr')
-                    QgsMapLayerRegistry.instance().addMapLayer(iso_layer)
-                    del self.table_lignes
+                            f1.setAttributes([float(ff)])
+                            table_lignes.addFeature(f1)
+                    #iso_layer=QgsVectorLayer(self.nom_fichier_iso,nom_sortie,"ogr")
+                    #QgsMapLayerRegistry.instance().addMapLayer(iso_layer)
+                    #os.unlink(rep_sortie+"/"+nom_sortie +".sqlite")
+                    del table_lignes
+
+                    if not os.path.isfile(rep_sortie+"/"+nom_sortie +".sqlite"):
+                        tlignes=QgsVectorLayer(self.nom_fichier_iso, nom_sortie, 'ogr')
+                        QgsVectorFileWriter.writeAsVectorFormat(tlignes,rep_sortie+"/"+nom_sortie +".sqlite","utf-8", None, "SQLite", False, None ,["SPATIALITE=YES",])
+                        del tlignes
+                    else:
+                        tlignes=NULL
+                        
+                    db_filename = rep_sortie+"/"+nom_sortie +".sqlite"
+                    conn = db.connect(db_filename)
+                    c = conn.cursor()
+                    texte='drop table if exists "'+nom_sortie+'_polys"'
+                    rs = c.execute(texte)
+                    texte='drop table if exists "'+nom_sortie+'"'
+                    rs = c.execute(texte)
+                    texte='drop table if exists "'+nom_sortie+'_2"'
+                    rs = c.execute(texte)
+                    texte='create virtual table "'+nom_sortie+ "_2\" using VirtualShape( '"+rep_sortie+"/"+nom_sortie +"',UTF-8,"+str(layer.crs().postgisSrid())+");"
+                    rs = c.execute(texte)
+                    if self.dlg_iso.radioButton.isChecked()==False:
+                        texte='create table \"'+nom_sortie+"_polys"+'\" as SELECT "'+nom_sortie+'_2".\'id\' as Id, casttomultipolygon(polygonize("'+nom_sortie+'_2".\'GEOMETRY\')) AS Geometry FROM \"'+nom_sortie+'_2\" GROUP BY  "'+nom_sortie+'_2".\'id\' ;'
+                        rs = c.execute(texte)
+                        texte='SELECT RecoverGeometryColumn(\"'+nom_sortie+"_polys\","+'\'Geometry\','+str(layer.crs().postgisSrid())+', \'MULTIPOLYGON\', \'XY\')'
+                        rs = c.execute(texte)
+                    else:
+                        texte='create table \"'+nom_sortie+"_polys"+'\" as SELECT "'+nom_sortie+'_2".\'id\' as Id, casttomultilinestring(st_union("'+nom_sortie+'_2".\'GEOMETRY\')) AS Geometry FROM \"'+nom_sortie+'_2\" GROUP BY  "'+nom_sortie+'_2".\'id\' ;'
+                        rs = c.execute(texte)
+                        texte='SELECT RecoverGeometryColumn(\"'+nom_sortie+"_polys\","+'\'Geometry\','+str(layer.crs().postgisSrid())+', \'MULTILINESTRING\', \'XY\')'
+                        rs = c.execute(texte)
+                    
+                   
+#                    texte='drop table if exists "'+nom_sortie+'_2"'
+#                    rs = c.execute(texte)
+                    conn.close()
+                    del c
+                
+                    del conn
+                    uri = QgsDataSourceURI()
+                    uri.setDatabase(rep_sortie+"/"+nom_sortie +".sqlite")
+                    schema = ''
+                    table =nom_sortie+"_polys"
+                    geom_column = 'Geometry'
+                    uri.setDataSource(schema, table, geom_column)
+                    display_name =nom_sortie+"_polys"
+                    iso_layer2 = QgsVectorLayer(uri.uri(), display_name, 'spatialite')
+                    QgsVectorFileWriter.deleteShapeFile(self.nom_fichier_iso)
+                    QgsVectorFileWriter.writeAsVectorFormat(iso_layer2, self.nom_fichier_iso, "utf-8", None, "ESRI Shapefile")
+                    del iso_layer2
+                    del uri
+                    iso_layer3=QgsVectorLayer(self.nom_fichier_iso, nom_sortie, 'ogr')
+                    #iso_layer3.setLayerName(nom_sortie)
+                    QgsMapLayerRegistry.instance().addMapLayer(iso_layer3)
+
+
+                    
             else:
                 QMessageBox().information(None,QCoreApplication.translate("Linear interpolation","Linear interpolation"),QCoreApplication.translate("The active layer isn't a raster layer","The active layer isn't a raster layer"))
         else:
