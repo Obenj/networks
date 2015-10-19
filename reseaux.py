@@ -801,12 +801,12 @@ class reseaux:
                 f2.setAttributes([(pt+1)*s])
                 f2.setGeometry(ligne1)
                 if min(lu,ld,ru,rd)>self.novalue:
-                    if pt*s not in self.polys:
-                        self.polys[pt*s]=[]
-                    self.polys[pt*s].append(f1.geometry().asMultiPolyline())
-                    if (pt+1)*s not in self.polys:
-                        self.polys[(pt+1)*s]=[]
-                    self.polys[(pt+1)*s].append(f2.geometry().asMultiPolyline())
+                    if (pt*s,p,q) not in self.polys:
+                        self.polys[pt*s,p,q]=[]
+                    self.polys[pt*s,p,q].append(f1.geometry().asMultiPolyline())
+                    if ((pt+1)*s,p,q) not in self.polys:
+                        self.polys[(pt+1)*s,p,q]=[]
+                    self.polys[(pt+1)*s,p,q].append(f2.geometry().asMultiPolyline())
                     
                     #self.table_lignes.addFeature(f1)
                     #self.table_lignes.addFeature(f2)
@@ -822,17 +822,17 @@ class reseaux:
                 f1.setAttributes([bords[pt][0]*s])
                 f1.setGeometry(ligne1)
                 if q>0:
-                    if grille[p,q-1]==self.novalue or grille[p+1,q-1]==self.novalue:
-                        if q<self.ny-1:
-                            if grille[p,q+1]>self.novalue and grille[p+1,q+1]>self.novalue:
-                                if bords[pt][0]*s not in self.polys:
-                                    self.polys[bords[pt][0]*s]=[]
-                                self.polys[bords[pt][0]*s].append(f1.geometry().asMultiPolyline())
-                                #self.table_lignes.addFeature(f1)
+                    #if grille[p,q-1]==self.novalue or grille[p+1,q-1]==self.novalue:
+                    if q<self.ny-1:
+                        #if grille[p,q+1]>self.novalue and grille[p+1,q+1]>self.novalue:
+                        if (bords[pt][0]*s, p,q) not in self.polys:
+                            self.polys[bords[pt][0]*s,p,q]=[]
+                        self.polys[bords[pt][0]*s,p,q].append(f1.geometry().asMultiPolyline())
+                            #self.table_lignes.addFeature(f1)
                 else:
-                    if bords[pt][0]*s not in self.polys:
-                        self.polys[bords[pt][0]*s]=[]
-                    self.polys[bords[pt][0]*s].append(f1.geometry().asMultiPolyline())
+                    if (bords[pt][0]*s, p,q) not in self.polys:
+                        self.polys[bords[pt][0]*s,p,q]=[]
+                    self.polys[bords[pt][0]*s,p,q].append(f1.geometry().asMultiPolyline())
                     #self.table_lignes.addFeature(f1)
         if len(bordl)>0:
             bords=sorted(bordl.items(),key=lambda x:x[1][0][1])
@@ -847,17 +847,17 @@ class reseaux:
                 f1.setAttributes([bords[pt][0]*s])
                 f1.setGeometry(ligne1)
                 if p>0:
-                    if grille[p-1,q]==self.novalue or grille[p-1,q+1]==self.novalue:
-                        if p<self.nx-1:
-                            if grille[p+1,q]>self.novalue and grille[p+1,q+1]>self.novalue:
-                                if bords[pt][0]*s not in self.polys:
-                                    self.polys[bords[pt][0]*s]=[]
-                                self.polys[bords[pt][0]*s].append(f1.geometry().asMultiPolyline())                                
-                                #self.table_lignes.addFeature(f1)
+                #if grille[p-1,q]==self.novalue or grille[p-1,q+1]==self.novalue:
+                    if p<self.nx-1:
+                        #if grille[p+1,q]>self.novalue and grille[p+1,q+1]>self.novalue:
+                        if (bords[pt][0]*s, p,q) not in self.polys:
+                            self.polys[bords[pt][0]*s,p,q]=[]
+                        self.polys[bords[pt][0]*s,p,q].append(f1.geometry().asMultiPolyline())                                
+                            #self.table_lignes.addFeature(f1)
                 else:
-                    if bords[pt][0]*s not in self.polys:
-                        self.polys[bords[pt][0]*s]=[]
-                    self.polys[bords[pt][0]*s].append(f1.geometry().asMultiPolyline())                    
+                    if (bords[pt][0]*s, p,q) not in self.polys:
+                        self.polys[bords[pt][0]*s,p,q]=[]
+                    self.polys[bords[pt][0]*s,p,q].append(f1.geometry().asMultiPolyline())                    
                     #self.table_lignes.addFeature(f1)
         if len(bordr)>0:
             bords=sorted(bordr.items(),key=lambda x:x[1][0][1])
@@ -872,17 +872,17 @@ class reseaux:
                 f1.setAttributes([bords[pt][0]*s])
                 f1.setGeometry(ligne1)
                 if p<self.nx-2:
-                    if grille[p+2,q]==self.novalue or grille[p+2,q+1]==self.novalue:
-                        if q>-1:
-                            if grille[p,q]>self.novalue and grille[p,q+1]>self.novalue:
-                                if bords[pt][0]*s not in self.polys:
-                                    self.polys[bords[pt][0]*s]=[]
-                                self.polys[bords[pt][0]*s].append(f1.geometry().asMultiPolyline())                                
+                #if grille[p+2,q]==self.novalue or grille[p+2,q+1]==self.novalue:
+                    if q>-1:
+                        #if grille[p,q]>self.novalue and grille[p,q+1]>self.novalue:
+                        if (bords[pt][0]*s, p,q) not in self.polys:
+                            self.polys[bords[pt][0]*s,p,q]=[]
+                        self.polys[bords[pt][0]*s,p,q].append(f1.geometry().asMultiPolyline())                                
                                 #self.table_lignes.addFeature(f1)
                 else:
-                    if bords[pt][0]*s not in self.polys:
-                        self.polys[bords[pt][0]*s]=[]
-                    self.polys[bords[pt][0]*s].append(f1.geometry().asMultiPolyline())                    
+                    if (bords[pt][0]*s, p,q) not in self.polys:
+                        self.polys[bords[pt][0]*s,p,q]=[]
+                    self.polys[bords[pt][0]*s,p,q].append(f1.geometry().asMultiPolyline())                    
                     #self.table_lignes.addFeature(f1)
         if len(bordd)>0:
             bords=sorted(bordd.items(),key=lambda x:x[1][0])
@@ -897,18 +897,18 @@ class reseaux:
                 f1.setAttributes([bords[pt][0]*s])
                 f1.setGeometry(ligne1)
                 if q<self.ny-2:
-                    if grille[p,q+2]==self.novalue or grille[p+1,q+2]==self.novalue:
-                        if q>-1:
-                            if grille[p,q]>self.novalue and grille[p+1,q]>self.novalue:
-                                if bords[pt][0]*s not in self.polys:
-                                    self.polys[bords[pt][0]*s]=[]
-                                self.polys[bords[pt][0]*s].append(f1.geometry().asMultiPolyline())                                
-                                #self.table_lignes.addFeature(f1)
+                #if grille[p,q+2]==self.novalue or grille[p+1,q+2]==self.novalue:
+                    if q>-1:
+                    #if grille[p,q]>self.novalue and grille[p+1,q]>self.novalue:
+                        if (bords[pt][0]*s, p,q) not in self.polys:
+                            self.polys[bords[pt][0]*s,p,q]=[]
+                        self.polys[bords[pt][0]*s,p,q].append(f1.geometry().asMultiPolyline())                                
+                        #self.table_lignes.addFeature(f1)
                 else:
 #                    self.table_lignes.addFeature(f1)
-                    if bords[pt][0]*s not in self.polys:
-                        self.polys[bords[pt][0]*s]=[]
-                    self.polys[bords[pt][0]*s].append(f1.geometry().asMultiPolyline())
+                    if (bords[pt][0]*s,p,q) not in self.polys:
+                        self.polys[bords[pt][0]*s,p,q]=[]
+                    self.polys[bords[pt][0]*s,p,q].append(f1.geometry().asMultiPolyline())
 
 
 
@@ -961,7 +961,9 @@ class reseaux:
                     grille = self.raster_or.GetRasterBand(nb_bands).ReadAsArray()
                     grille=numpy.rot90(grille,3)
                     champs2=QgsFields()
-                    champs2.append(QgsField("Id",QVariant.Double))
+                    champs2.append(QgsField("id",QVariant.Double))
+                    champs2.append(QgsField("p",QVariant.Double))
+                    champs2.append(QgsField("q",QVariant.Double))
                     if self.dlg_iso.radioButton.isChecked()==False:
                         table_lignes=QgsVectorFileWriter(self.nom_fichier_iso,"UTF-8",champs2,QGis.WKBMultiLineString,self.iface.activeLayer().crs(),"ESRI Shapefile")
                     else:
@@ -991,10 +993,10 @@ class reseaux:
                         self.process.setValue(k)
                         liste1=[QgsGeometry.fromMultiPolyline(l1) for l1 in li]
                         for j,i in enumerate(liste1):
-                            f1=QgsFeature()
+                            f1=QgsFeature(champs2)
                             geom=i
                             f1.setGeometry(geom)
-                            f1.setAttributes([float(ff)])
+                            f1.setAttributes([float(ff[0]),ff[1],ff[2]])
                             table_lignes.addFeature(f1)
                     #iso_layer=QgsVectorLayer(self.nom_fichier_iso,nom_sortie,"ogr")
                     #QgsMapLayerRegistry.instance().addMapLayer(iso_layer)
@@ -1013,6 +1015,8 @@ class reseaux:
                     c = conn.cursor()
                     texte='drop table if exists "'+nom_sortie+'_polys"'
                     rs = c.execute(texte)
+                    texte='drop table if exists "'+nom_sortie+'_polys2"'
+                    rs = c.execute(texte)
                     texte='drop table if exists "'+nom_sortie+'"'
                     rs = c.execute(texte)
                     texte='drop table if exists "'+nom_sortie+'_2"'
@@ -1020,14 +1024,16 @@ class reseaux:
                     texte='create virtual table "'+nom_sortie+ "_2\" using VirtualShape( '"+rep_sortie+"/"+nom_sortie +"',UTF-8,"+str(layer.crs().postgisSrid())+");"
                     rs = c.execute(texte)
                     if self.dlg_iso.radioButton.isChecked()==False:
-                        texte='create table \"'+nom_sortie+"_polys"+'\" as SELECT "'+nom_sortie+'_2".\'id\' as Id, casttomultipolygon(polygonize("'+nom_sortie+'_2".\'GEOMETRY\')) AS Geometry FROM \"'+nom_sortie+'_2\" GROUP BY  "'+nom_sortie+'_2".\'id\' ;'
+                        texte='create table \"'+nom_sortie+"_polys\" as SELECT id, casttomultipolygon(polygonize(\""+nom_sortie+'_2".\'GEOMETRY\')) AS geom FROM \"'+nom_sortie+'_2\" GROUP BY id,p,q;'
                         rs = c.execute(texte)
-                        texte='SELECT RecoverGeometryColumn(\"'+nom_sortie+"_polys\","+'\'Geometry\','+str(layer.crs().postgisSrid())+', \'MULTIPOLYGON\', \'XY\')'
+                        texte='create table \"'+nom_sortie+'_polys2" as SELECT id,st_union(geom) AS geom FROM \"'+nom_sortie+'_polys\" GROUP BY id;'
+                        rs = c.execute(texte)
+                        texte='SELECT RecoverGeometryColumn(\"'+nom_sortie+"_polys2\","+'\'geom\','+str(layer.crs().postgisSrid())+', \'MULTIPOLYGON\', \'XY\')'
                         rs = c.execute(texte)
                     else:
-                        texte='create table \"'+nom_sortie+"_polys"+'\" as SELECT "'+nom_sortie+'_2".\'id\' as Id, casttomultilinestring(st_union("'+nom_sortie+'_2".\'GEOMETRY\')) AS Geometry FROM \"'+nom_sortie+'_2\" GROUP BY  "'+nom_sortie+'_2".\'id\' ;'
+                        texte='create table \"'+nom_sortie+"_polys2"+'\" as SELECT "'+nom_sortie+'_2".\'id\' as Id, casttomultilinestring(st_union("'+nom_sortie+'_2".\'GEOMETRY\')) AS Geometry FROM \"'+nom_sortie+'_2\" GROUP BY  "'+nom_sortie+'_2".\'id\' ;'
                         rs = c.execute(texte)
-                        texte='SELECT RecoverGeometryColumn(\"'+nom_sortie+"_polys\","+'\'Geometry\','+str(layer.crs().postgisSrid())+', \'MULTILINESTRING\', \'XY\')'
+                        texte='SELECT RecoverGeometryColumn(\"'+nom_sortie+"_polys2\","+'\'geom\','+str(layer.crs().postgisSrid())+', \'MULTILINESTRING\', \'XY\')'
                         rs = c.execute(texte)
                     
                    
@@ -1040,8 +1046,8 @@ class reseaux:
                     uri = QgsDataSourceURI()
                     uri.setDatabase(rep_sortie+"/"+nom_sortie +".sqlite")
                     schema = ''
-                    table =nom_sortie+"_polys"
-                    geom_column = 'Geometry'
+                    table =nom_sortie+"_polys2"
+                    geom_column = 'geom'
                     uri.setDataSource(schema, table, geom_column)
                     display_name =nom_sortie+"_polys"
                     iso_layer2 = QgsVectorLayer(uri.uri(), display_name, 'spatialite')
