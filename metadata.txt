@@ -22,7 +22,8 @@ email=patrick.palmier@cerema.fr
 # Optional items:
 
 # Uncomment the following line and add your changelog entries:
-changelog=1.2.2 fix bugs if isoband generation with complex polygons
+changelog=1.2.3 changes in isoband generation (reduction of the number of minidumps)
+	1.2.2 fix bugs if isoband generation with complex polygons
 	1.2.1 fix some bugs
 	1.2 generation of isobands with spatialite (because pb with combine API in QGis 2.10)
 	1.1.2 some bug fixes in isoband generation on linux

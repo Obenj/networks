@@ -1015,26 +1015,36 @@ class reseaux:
                     c = conn.cursor()
                     texte='drop table if exists "'+nom_sortie+'_polys"'
                     rs = c.execute(texte)
+                    conn.commit()
                     texte='drop table if exists "'+nom_sortie+'_polys2"'
                     rs = c.execute(texte)
+                    conn.commit()
                     texte='drop table if exists "'+nom_sortie+'"'
                     rs = c.execute(texte)
+                    conn.commit()
                     texte='drop table if exists "'+nom_sortie+'_2"'
                     rs = c.execute(texte)
+                    conn.commit()
                     texte='create virtual table "'+nom_sortie+ "_2\" using VirtualShape( '"+rep_sortie+"/"+nom_sortie +"',UTF-8,"+str(layer.crs().postgisSrid())+");"
                     rs = c.execute(texte)
+                    conn.commit()
                     if self.dlg_iso.radioButton.isChecked()==False:
                         texte='create table \"'+nom_sortie+"_polys\" as SELECT id, casttomultipolygon(polygonize(\""+nom_sortie+'_2".\'GEOMETRY\')) AS geom FROM \"'+nom_sortie+'_2\" GROUP BY id,p,q;'
                         rs = c.execute(texte)
+                        conn.commit()
                         texte='create table \"'+nom_sortie+'_polys2" as SELECT id,st_union(geom) AS geom FROM \"'+nom_sortie+'_polys\" GROUP BY id;'
                         rs = c.execute(texte)
+                        conn.commit()
                         texte='SELECT RecoverGeometryColumn(\"'+nom_sortie+"_polys2\","+'\'geom\','+str(layer.crs().postgisSrid())+', \'MULTIPOLYGON\', \'XY\')'
                         rs = c.execute(texte)
+                        conn.commit()
                     else:
                         texte='create table \"'+nom_sortie+"_polys2"+'\" as SELECT "'+nom_sortie+'_2".\'id\' as Id, casttomultilinestring(st_union("'+nom_sortie+'_2".\'GEOMETRY\')) AS Geometry FROM \"'+nom_sortie+'_2\" GROUP BY  "'+nom_sortie+'_2".\'id\' ;'
                         rs = c.execute(texte)
+                        conn.commit()
                         texte='SELECT RecoverGeometryColumn(\"'+nom_sortie+"_polys2\","+'\'geom\','+str(layer.crs().postgisSrid())+', \'MULTILINESTRING\', \'XY\')'
                         rs = c.execute(texte)
+                        conn.commit()
                     
                    
 #                    texte='drop table if exists "'+nom_sortie+'_2"'
