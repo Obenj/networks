@@ -27,6 +27,7 @@ from qgis.utils import *
 import numpy
 import math
 import time
+import copy
 from osgeo import gdal
 # Initialize Qt resources from file resources.py
 import resources_rc
@@ -62,6 +63,7 @@ class reseaux:
         self.dlg_connect=reseauxDialog_connect()
         self.dlg_interpol=reseauxDialog_interpol()
         self.dlg_iso=dialog_Isopoly()
+        self.layer_interpol_line=""
         self.largeur=0.0
         self.hauteur=0.0
         self.nx=0
@@ -349,15 +351,25 @@ class reseaux:
                 self.pixel_size_x=float(self.dlg_interpol.lineEdit_3.text())
                 self.pixel_size_y=float(self.dlg_interpol.lineEdit_4.text()) 
                 
-                for i in layer.dataProvider().fields():
-                    self.dlg_interpol.comboBox.addItem(i.name())
-                    self.dlg_interpol.comboBox_2.addItem(i.name())
-                    self.dlg_interpol.comboBox_3.addItem(i.name())
-                    self.dlg_interpol.comboBox_4.addItem(i.name())
-                    self.dlg_interpol.comboBox_5.addItem(i.name())
-                    self.dlg_interpol.comboBox_6.addItem(i.name())
-                    self.dlg_interpol.comboBox_7.addItem(i.name())
-                    self.dlg_interpol.comboBox_8.addItem(i.name())
+                if self.layer_interpol_line!=layer.name():
+                    self.layer_interpol_line=layer.name()
+                    self.dlg_interpol.comboBox.clear()
+                    self.dlg_interpol.comboBox_2.clear()
+                    self.dlg_interpol.comboBox_3.clear()
+                    self.dlg_interpol.comboBox_4.clear()
+                    self.dlg_interpol.comboBox_5.clear()
+                    self.dlg_interpol.comboBox_6.clear()
+                    self.dlg_interpol.comboBox_7.clear()
+                    self.dlg_interpol.comboBox_8.clear()
+                    for i in layer.dataProvider().fields():
+                        self.dlg_interpol.comboBox.addItem(i.name())
+                        self.dlg_interpol.comboBox_2.addItem(i.name())
+                        self.dlg_interpol.comboBox_3.addItem(i.name())
+                        self.dlg_interpol.comboBox_4.addItem(i.name())
+                        self.dlg_interpol.comboBox_5.addItem(i.name())
+                        self.dlg_interpol.comboBox_6.addItem(i.name())
+                        self.dlg_interpol.comboBox_7.addItem(i.name())
+                        self.dlg_interpol.comboBox_8.addItem(i.name())
                 self.dlg_interpol.show()
 
                 result = self.dlg_interpol.exec_()
@@ -429,7 +441,11 @@ class reseaux:
                             self.dx=int(zone.width()/self.pixel_size_x)
                             self.dy=int(zone.height()/self.pixel_size_y)
                             l1=geom.length()
-                            geom_l=geom.asPolyline()
+                            if geom.isMultipart():
+                                geom_l=geom.asMultiPolyline()[0]
+                            else:
+                                geom_l=geom.asPolyline()
+                            
                             for p in range(self.dx):
                                 d2x=self.deltax+p
                                 for q in range(self.dy):
@@ -442,14 +458,21 @@ class reseaux:
                                         if d<=grille_distance[d2x,d2y] and d<self.radius*self.radius:
                                             if d>0 and l1>0:
                                                 pt2=res[1]
-                                                geoma=geom_l[:res[2]]+[pt2]
-                                                l2=QgsGeometry.fromPolyline(geoma).length()
+                                                #geoma=geom_l[:res[2]]+[pt2]
+                                                geoma=QgsGeometry(geom)
+                                                geoma.insertVertex(pt2[0],pt2[1],res[2])
+                                                l2=geoma.length()
                                                 if res[2]==0:
-                                                    pt3=geom_l[res[2]]
-                                                    pt4=geom_l[res[2]+1]
+                                                    pt3=geom.vertexAt(res[2])
+                                                    pt4=geom.vertexAt(res[2]+1)
                                                 else:
-                                                    pt3=geom_l[res[2]-1]
-                                                    pt4=geom_l[res[2]]
+                                                    try:
+                                                        pt3=geom.vertexAt(res[2]-1)
+                                                        pt4=geom.vertexAt(res[2])
+                                                    except:
+                                                        print(res,geom_l)
+                                                        pt3=geom_l[res[2]-1]
+                                                        pt4=geom_l[res[2]]
                                                 p1=pt1.asPoint()
                                                 test_sens=(pt4.x()-pt3.x())*(p1.y()-pt2.y())-(p1.x()-pt2.x())*(pt4.y()-pt3.y())
                                                 if sens in ['1','3'] and not i.attribute(self.AB_j)==None:
