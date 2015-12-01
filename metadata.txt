@@ -13,7 +13,7 @@ name=networks
 qgisMinimumVersion=2.0
 description=Manage linear networks. Several functionalities as generating a graph from a linear layer, invert and split polylines, and connect point to a linear objects, and perform a linear-based deterministic interpolation for accessibility maps
 about=Manage linear networks. Several functionalities as generating a graph from a linear layer, reverting and splitting polylines, connecting points to a linear objects, performing a linear-based deterministic interpolation for accessibility maps and generating iso-bands
-version=1.2.5
+version=1.2.7
 author=CEREMA Nord-Picardie
 email=patrick.palmier@cerema.fr
 
@@ -22,7 +22,9 @@ email=patrick.palmier@cerema.fr
 # Optional items:
 
 # Uncomment the following line and add your changelog entries:
-changelog=1.2.5 fix bug in interpolation introduced in 1.2.4
+changelog=1.2.7 fix bug in interpolation
+	1.2.6 Isobands generation in memory (less minidump?)
+	1.2.5 fix bug in interpolation introduced in 1.2.4
 	1.2.4 fix some bugs interpolation with multilinestrings and add fields from interpolation without remove old ones
 	1.2.3 changes in isoband generation (reduction of the number of minidumps)
 	1.2.2 fix bugs if isoband generation with complex polygons

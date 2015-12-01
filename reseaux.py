@@ -442,7 +442,7 @@ class reseaux:
                             self.dy=int(zone.height()/self.pixel_size_y)
                             l1=geom.length()
                             if geom.isMultipart():
-                                geom_l=geom.asMultiPolyline()[0]
+                                geom_l=geom.asMultiPolyline()
                             else:
                                 geom_l=geom.asPolyline()
                             
@@ -458,10 +458,20 @@ class reseaux:
                                         if d<=grille_distance[d2x,d2y] and d<self.radius*self.radius:
                                             if d>0 and l1>0:
                                                 pt2=res[1]
-                                                #geoma=geom_l[:res[2]]+[pt2]
-                                                geoma=QgsGeometry(geom)
-                                                geoma.insertVertex(pt2[0],pt2[1],res[2])
-                                                l2=geoma.length()
+                                                if geom.isMultipart():
+                                                    num_poly=-1
+                                                    npts=0
+                                                    for id_poly in geom_l:
+                                                        if res[2]<npts+len(id_poly):
+                                                            num_poly=(id_poly,npts)
+                                                        else:
+                                                            npts+=len(id_poly)
+                                                    geom_a=[num_poly][:(res[2]-npts)]+[pt2]
+                                                else:
+                                                    geoma=geom_l[:res[2]]+[pt2]
+                                                #geoma=QgsGeometry(geom)
+                                                #geoma.insertVertex(pt2[0],pt2[1],res[2])
+                                                l2=QgsGeometry.fromPolyline(geoma).length()
                                                 if res[2]==0:
                                                     pt3=geom.vertexAt(res[2])
                                                     pt4=geom.vertexAt(res[2]+1)
@@ -985,10 +995,10 @@ class reseaux:
                     grille=numpy.rot90(grille,3)
                     champs2=QgsFields()
                     champs2.append(QgsField("id",QVariant.Double))
-                    champs2.append(QgsField("p",QVariant.Double))
-                    champs2.append(QgsField("q",QVariant.Double))
+#                    champs2.append(QgsField("p",QVariant.Double))
+#                   champs2.append(QgsField("q",QVariant.Double))
                     if self.dlg_iso.radioButton.isChecked()==False:
-                        table_lignes=QgsVectorFileWriter(self.nom_fichier_iso,"UTF-8",champs2,QGis.WKBMultiLineString,self.iface.activeLayer().crs(),"ESRI Shapefile")
+                        table_lignes=QgsVectorFileWriter(self.nom_fichier_iso,"UTF-8",champs2,QGis.WKBMultiPolygon,self.iface.activeLayer().crs(),"ESRI Shapefile")
                     else:
                         table_lignes=QgsVectorFileWriter(self.nom_fichier_iso,"UTF-8",champs2,QGis.WKBMultiLineString,self.iface.activeLayer().crs(),"ESRI Shapefile")
                     self.fenetre=layer.extent()
@@ -1011,30 +1021,9 @@ class reseaux:
                     npolys=len(self.polys)-1
                     self.process=QProgressDialog("Building Polygons...","Cancel",0,npolys)
                     self.process.forceShow()
-                    for k,ff in enumerate(self.polys):
-                        li=self.polys[ff] 
-                        self.process.setValue(k)
-                        liste1=[QgsGeometry.fromMultiPolyline(l1) for l1 in li]
-                        for j,i in enumerate(liste1):
-                            f1=QgsFeature(champs2)
-                            geom=i
-                            f1.setGeometry(geom)
-                            f1.setAttributes([float(ff[0]),ff[1],ff[2]])
-                            table_lignes.addFeature(f1)
-                    #iso_layer=QgsVectorLayer(self.nom_fichier_iso,nom_sortie,"ogr")
-                    #QgsMapLayerRegistry.instance().addMapLayer(iso_layer)
-                    #os.unlink(rep_sortie+"/"+nom_sortie +".sqlite")
-                    del table_lignes
 
-                    if not os.path.isfile(rep_sortie+"/"+nom_sortie +".sqlite"):
-                        tlignes=QgsVectorLayer(self.nom_fichier_iso, nom_sortie, 'ogr')
-                        QgsVectorFileWriter.writeAsVectorFormat(tlignes,rep_sortie+"/"+nom_sortie +".sqlite","utf-8", None, "SQLite", False, None ,["SPATIALITE=YES",])
-                        del tlignes
-                    else:
-                        tlignes=NULL
-                        
-                    db_filename = rep_sortie+"/"+nom_sortie +".sqlite"
-                    conn = db.connect(db_filename)
+
+                    conn = db.connect(':memory:')
                     c = conn.cursor()
                     texte='drop table if exists "'+nom_sortie+'_polys"'
                     rs = c.execute(texte)
@@ -1048,11 +1037,49 @@ class reseaux:
                     texte='drop table if exists "'+nom_sortie+'_2"'
                     rs = c.execute(texte)
                     conn.commit()
-                    texte='create virtual table "'+nom_sortie+ "_2\" using VirtualShape( '"+rep_sortie+"/"+nom_sortie +"',UTF-8,"+str(layer.crs().postgisSrid())+");"
+                    texte='create table '+nom_sortie+' (id double,p integer,q integer, geom geometry)'
                     rs = c.execute(texte)
                     conn.commit()
+                    texte='SELECT RecoverGeometryColumn(\''+nom_sortie+'\',\'geom\','+str(layer.crs().postgisSrid())+', \'MULTILINESTRING\', \'XY\')'
+                    rs = c.execute(texte)
+                    conn.commit()
+
+
+
+                    for k,ff in enumerate(self.polys):
+                        li=self.polys[ff] 
+                        self.process.setValue(k)
+                        liste1=[QgsGeometry.fromMultiPolyline(l1) for l1 in li]
+                        for j,i in enumerate(liste1):
+                            #f1=QgsFeature(champs2)
+                            #geom=i
+                            #f1.setGeometry(geom)
+                            #f1.setAttributes([float(ff[0]),ff[1],ff[2]])
+                            #table_lignes.addFeature(f1)
+
+                            texte='insert into '+nom_sortie +' values('+str(float(ff[0]))+','+str(ff[1])+','+str(ff[2])+',st_geomfromtext(\''+i.exportToWkt()+'\',2154))'
+                            rs = c.execute(texte)
+                            conn.commit()
+                    #iso_layer=QgsVectorLayer(self.nom_fichier_iso,nom_sortie,"ogr")
+                    #QgsMapLayerRegistry.instance().addMapLayer(iso_layer)
+                    #os.unlink(rep_sortie+"/"+nom_sortie +".sqlite")
+                    #del table_lignes
+
+#                    if not os.path.isfile(rep_sortie+"/"+nom_sortie +".sqlite"):
+#                        tlignes=QgsVectorLayer(self.nom_fichier_iso, nom_sortie, 'ogr')
+#                        QgsVectorFileWriter.writeAsVectorFormat(tlignes,rep_sortie+"/"+nom_sortie +".sqlite","utf-8", None, "SQLite", False, None ,["SPATIALITE=YES",])
+#                        del tlignes
+#                    else:
+#                        tlignes=NULL
+                        
+                    db_filename = rep_sortie+"/"+nom_sortie +".sqlite"
+                    #conn = db.connect(db_filename)
+                   
+                    #texte='create virtual table "'+nom_sortie+ "_2\" using VirtualShape( '"+rep_sortie+"/"+nom_sortie +"',UTF-8,"+str(layer.crs().postgisSrid())+");"
+                    #rs = c.execute(texte)
+                    c#onn.commit()
                     if self.dlg_iso.radioButton.isChecked()==False:
-                        texte='create table \"'+nom_sortie+"_polys\" as SELECT id, casttomultipolygon(polygonize(\""+nom_sortie+'_2".\'GEOMETRY\')) AS geom FROM \"'+nom_sortie+'_2\" GROUP BY id,p,q;'
+                        texte='create table \"'+nom_sortie+"_polys\" as SELECT id, casttomultipolygon(polygonize("+nom_sortie+'.geom)) AS geom FROM \"'+nom_sortie+'\" GROUP BY id,p,q;'
                         rs = c.execute(texte)
                         conn.commit()
                         texte='create table \"'+nom_sortie+'_polys2" as SELECT id,st_union(geom) AS geom FROM \"'+nom_sortie+'_polys\" GROUP BY id;'
@@ -1069,6 +1096,16 @@ class reseaux:
                         rs = c.execute(texte)
                         conn.commit()
                     
+                    texte='select id, asWkt(geom) from '+nom_sortie+"_polys2"
+                    rs=c.execute(texte)
+                    resultat=c.fetchall()
+                    conn.commit()
+                    for r in resultat:
+                        f1=QgsFeature(champs2)
+                        geom=QgsGeometry.fromWkt(r[1])
+                        f1.setGeometry(geom)
+                        f1.setAttributes([float(r[0])])
+                        table_lignes.addFeature(f1)
                    
 #                    texte='drop table if exists "'+nom_sortie+'_2"'
 #                    rs = c.execute(texte)
@@ -1076,22 +1113,23 @@ class reseaux:
                     del c
                 
                     del conn
-                    uri = QgsDataSourceURI()
-                    uri.setDatabase(rep_sortie+"/"+nom_sortie +".sqlite")
-                    schema = ''
-                    table =nom_sortie+"_polys2"
-                    geom_column = 'geom'
-                    uri.setDataSource(schema, table, geom_column)
-                    display_name =nom_sortie+"_polys"
-                    iso_layer2 = QgsVectorLayer(uri.uri(), display_name, 'spatialite')
-                    QgsVectorFileWriter.deleteShapeFile(self.nom_fichier_iso)
-                    QgsVectorFileWriter.writeAsVectorFormat(iso_layer2, self.nom_fichier_iso, "utf-8", None, "ESRI Shapefile")
-                    del iso_layer2
-                    del uri
+                    del table_lignes
+#                    uri = QgsDataSourceURI()
+#                    uri.setDatabase(rep_sortie+"/"+nom_sortie +".sqlite")
+#                    schema = ''
+#                    table =nom_sortie+"_polys2"
+#                    geom_column = 'geom'
+#                    uri.setDataSource(schema, table, geom_column)
+#                    display_name =nom_sortie+"_polys"
+#                    iso_layer2 = QgsVectorLayer(uri.uri(), display_name, 'spatialite')
+#                    QgsVectorFileWriter.deleteShapeFile(self.nom_fichier_iso)
+#                    QgsVectorFileWriter.writeAsVectorFormat(iso_layer2, self.nom_fichier_iso, "utf-8", None, "ESRI Shapefile")
+#                    del iso_layer2
+#                    del uri
                     iso_layer3=QgsVectorLayer(self.nom_fichier_iso, nom_sortie, 'ogr')
-                    #iso_layer3.setLayerName(nom_sortie)
+#                    #iso_layer3.setLayerName(nom_sortie)
                     QgsMapLayerRegistry.instance().addMapLayer(iso_layer3)
-
+#
 
                     
             else:
